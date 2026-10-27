@@ -1,18 +1,36 @@
-// --- Main Application Component: Thai Hypertension Guide (CPG 2567) ---
-// APP_VERSION and changelogData live in components-layout.js
+// --- Main page: Thai HT Guide (Bronchodilator Guide layout, v1.2.0) ---
+// APP_VERSION and changelogData live in components-layout.js; guide windows render GuideBody (components-guides.js)
 
 const FIRST_LINE_CLASS_IDS = ['acei', 'arb', 'dhp_ccb', 'thiazide_like', 'beta_blocker', 'spc_dual', 'spc_triple'];
-const EMPTY_FILTERS = { nlemOnly: false, firstLineOnly: false, spcOnly: false, pregnancySafe: false, renalSafe: false };
+
+// Guide buttons: key, full name, short name (phone tiles), colour, icon
+const GUIDES = [
+  ['starting', { th: 'เริ่มยาและเป้าหมาย', en: 'Start & targets' }, { th: 'เริ่มยา', en: 'Start' }, 'bg-teal-600 hover:bg-teal-700 border-teal-700', StethoscopeIcon],
+  ['secondary', { th: 'ความดันสูงทุติยภูมิ', en: 'Secondary HT' }, { th: 'ทุติยภูมิ', en: 'Secondary' }, 'bg-violet-600 hover:bg-violet-700 border-violet-700', ZapIcon],
+  ['resistant', { th: 'ความดันสูงดื้อยา', en: 'Resistant HT' }, { th: 'ดื้อยา', en: 'Resistant' }, 'bg-indigo-600 hover:bg-indigo-700 border-indigo-700', ActivityIcon],
+  ['crises', { th: 'ภาวะวิกฤต', en: 'Crises' }, { th: 'วิกฤต', en: 'Crises' }, 'bg-rose-600 hover:bg-rose-700 border-rose-700', AlertTriangleIcon],
+  ['comorbidities', { th: 'โรคร่วม', en: 'Comorbidities' }, { th: 'โรคร่วม', en: 'Comorbid' }, 'bg-sky-600 hover:bg-sky-700 border-sky-700', HeartPulseIcon],
+  ['tools', { th: 'เครื่องมือคำนวณ', en: 'Clinical tools' }, { th: 'เครื่องมือ', en: 'Tools' }, 'bg-amber-600 hover:bg-amber-700 border-amber-700', CalculatorIcon],
+  ['sheet', { th: 'ใบคำแนะนำผู้ป่วย', en: 'Patient sheet' }, { th: 'ใบผู้ป่วย', en: 'Sheet' }, 'bg-emerald-600 hover:bg-emerald-700 border-emerald-700', PrinterIcon],
+];
+
+const CLINICAL = [
+  ['firstLine', { th: 'ยากลุ่มหลัก 5 กลุ่ม', en: 'First-line classes' }, 'bg-blue-600 text-white shadow-sm', 'text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-700'],
+  ['spc', { th: 'ยารวมเม็ด (SPC)', en: 'Single-pill combos' }, 'bg-teal-600 text-white shadow-sm', 'text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-slate-700'],
+  ['pregnancy', { th: 'ใช้ได้ในครรภ์', en: 'Pregnancy use' }, 'bg-rose-600 text-white shadow-sm', 'text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-slate-700'],
+  ['renal', { th: 'ใช้ได้เมื่อ eGFR < 30', en: 'eGFR < 30 use' }, 'bg-indigo-600 text-white shadow-sm', 'text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-slate-700'],
+];
+const CLINICAL_TEST = {
+  firstLine: (d) => FIRST_LINE_CLASS_IDS.includes(d.classId),
+  spc: (d) => d.classId.startsWith('spc_'),
+  pregnancy: (d) => d.pregnancyRisk === 'safe_first_line',
+  renal: (d) => d.renalAdjustment.cutoff <= 15,
+};
 
 const App = () => {
   // Theme: follows the device until the sun/moon button is tapped, then remembers the choice
   const [themePref, setThemePref] = useState(() => {
-    try {
-      const saved = localStorage.getItem('htg-theme');
-      return saved === 'dark' || saved === 'light' ? saved : null;
-    } catch (e) {
-      return null;
-    }
+    try { const s = localStorage.getItem('htg-theme'); return s === 'dark' || s === 'light' ? s : null; } catch (e) { return null; }
   });
   const [systemDark, setSystemDark] = useState(() => !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
   useEffect(() => {
@@ -23,59 +41,48 @@ const App = () => {
     return () => { if (mq.removeEventListener) mq.removeEventListener('change', onChange); else mq.removeListener(onChange); };
   }, []);
   const theme = themePref || (systemDark ? 'dark' : 'light');
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+  useEffect(() => { document.documentElement.classList.toggle('dark', theme === 'dark'); }, [theme]);
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setThemePref(next);
     try { localStorage.setItem('htg-theme', next); } catch (e) { /* not remembered */ }
   };
 
-  // Language ('th' or 'en')
-  const [lang, setLang] = useState(() => {
-    try {
-      return localStorage.getItem('htg-lang') === 'en' ? 'en' : 'th';
-    } catch (e) {
-      return 'th';
-    }
-  });
+  const [lang, setLang] = useState(() => { try { return localStorage.getItem('htg-lang') === 'en' ? 'en' : 'th'; } catch (e) { return 'th'; } });
   useEffect(() => {
     try { localStorage.setItem('htg-lang', lang); } catch (e) { /* not remembered */ }
     document.documentElement.lang = lang;
   }, [lang]);
-  const toggleLang = () => setLang((prev) => (prev === 'th' ? 'en' : 'th'));
+  const L = (th, en) => (lang === 'th' ? th : en);
+  const t = translations[lang];
 
-  const [activeTab, setActiveTab] = useState('drugs');
-
-  // Search & filters
-  const [searchQuery, setSearchQuery] = useState('');
+  // Search, sort, view, filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false); // phones: the search box opens across the row
+  const searchRef = useRef(null);
+  useEffect(() => { if (searchOpen && searchRef.current) searchRef.current.focus(); }, [searchOpen]);
+  const [sortOrder, setSortOrder] = useState('nameAsc');
+  const [viewMode, setViewMode] = useState('grid');
+  const [filtersOpen, setFiltersOpen] = useState(() => !(typeof window !== 'undefined' && window.innerWidth < 640));
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedClass, setSelectedClass] = useState('all');
-  const [quickFilters, setQuickFilters] = useState(EMPTY_FILTERS);
-  const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
-  const [viewMode, setViewMode] = useState('card');
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [clinical, setClinical] = useState([]);
+  const [nlemOnly, setNlemOnly] = useState(false);
+  const [bookmarksOnly, setBookmarksOnly] = useState(false);
 
-  // Compare (up to 4), detail, patient sheet, changelog
+  // Windows
+  const [openGuide, setOpenGuide] = useState(null);
+  const [detailDrug, setDetailDrug] = useState(null);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [comparedIds, setComparedIds] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [detailDrug, setDetailDrug] = useState(null);
-  const [showPatientSheet, setShowPatientSheet] = useState(false);
-  const [showChangelog, setShowChangelog] = useState(false);
 
   // Bookmarks
   const [bookmarkedIds, setBookmarkedIds] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('htg-bookmarks'));
-      return Array.isArray(saved) ? saved : [];
-    } catch (e) {
-      return [];
-    }
+    try { const s = JSON.parse(localStorage.getItem('htg-bookmarks')); return Array.isArray(s) ? s : []; } catch (e) { return []; }
   });
-  const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
-  useEffect(() => {
-    try { localStorage.setItem('htg-bookmarks', JSON.stringify(bookmarkedIds)); } catch (e) { /* not remembered */ }
-  }, [bookmarkedIds]);
+  useEffect(() => { try { localStorage.setItem('htg-bookmarks', JSON.stringify(bookmarkedIds)); } catch (e) { /* not remembered */ } }, [bookmarkedIds]);
+  const toggleBookmark = (id) => setBookmarkedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   // Escape closes the top-most window
   useEffect(() => {
@@ -84,710 +91,292 @@ const App = () => {
       if (showChangelog) setShowChangelog(false);
       else if (detailDrug) setDetailDrug(null);
       else if (showCompareModal) setShowCompareModal(false);
-      else if (showPatientSheet) setShowPatientSheet(false);
+      else if (openGuide) setOpenGuide(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showChangelog, detailDrug, showCompareModal, showPatientSheet]);
-
-  const toggleBookmark = (id) => {
-    setBookmarkedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
+  }, [showChangelog, detailDrug, showCompareModal, openGuide]);
 
   const toggleCompare = (drug) => {
     setComparedIds((prev) => {
       if (prev.includes(drug.id)) return prev.filter((x) => x !== drug.id);
-      if (prev.length >= 4) {
-        alert(lang === 'th' ? 'สามารถเปรียบเทียบได้สูงสุด 4 ตัวยาพร้อมกัน' : 'You can compare up to 4 drugs at a time.');
-        return prev;
-      }
+      if (prev.length >= 4) return prev; // the bar holds 4; a fifth tap does nothing
       return [...prev, drug.id];
     });
   };
-  const removeCompared = (id) => setComparedIds((prev) => prev.filter((x) => x !== id));
-  const clearCompared = () => setComparedIds([]);
+  const comparedDrugs = useMemo(() => comparedIds.map((id) => drugsData.find((d) => d.id === id)).filter(Boolean), [comparedIds]);
 
-  const comparedDrugs = useMemo(
-    () => comparedIds.map((id) => drugsData.find((d) => d.id === id)).filter(Boolean),
-    [comparedIds]
-  );
-
-  const activeFiltersCount = useMemo(() => {
-    let count = Object.values(quickFilters).filter(Boolean).length;
-    if (selectedCategory !== 'all') count++;
-    if (selectedClass !== 'all') count++;
-    if (showBookmarksOnly) count++;
-    return count;
-  }, [selectedCategory, selectedClass, quickFilters, showBookmarksOnly]);
-
-  const clearAllFilters = () => {
-    setSelectedCategory('all');
-    setSelectedClass('all');
-    setQuickFilters(EMPTY_FILTERS);
-    setShowBookmarksOnly(false);
-    setSearchQuery('');
+  const classesOf = (cat) => drugClasses.filter((c) => cat === 'all' || c.categoryId === cat);
+  const toggleIn = (setter) => (k) => setter((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  const toggleClass = toggleIn(setSelectedClasses);
+  const toggleClinical = toggleIn(setClinical);
+  const selectCategory = (cat) => {
+    setSelectedCategory(cat);
+    if (cat !== 'all') setSelectedClasses((prev) => prev.filter((k) => classesOf(cat).some((c) => c.id === k)));
   };
-  const toggleQuick = (key) => setQuickFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  const resetFilters = () => {
+    setSearchTerm(''); setSelectedCategory('all'); setSelectedClasses([]); setClinical([]);
+    setNlemOnly(false); setBookmarksOnly(false); setSortOrder('nameAsc');
+  };
 
   const filteredDrugs = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    return drugsData.filter((drug) => {
-      if (showBookmarksOnly && !bookmarkedIds.includes(drug.id)) return false;
-      if (selectedCategory !== 'all') {
-        const cls = drugClasses.find((c) => c.id === drug.classId);
-        if (!cls || cls.categoryId !== selectedCategory) return false;
-      }
-      if (selectedClass !== 'all' && drug.classId !== selectedClass) return false;
-      if (quickFilters.nlemOnly && !drug.nlem) return false;
-      if (quickFilters.firstLineOnly && !FIRST_LINE_CLASS_IDS.includes(drug.classId)) return false;
-      if (quickFilters.spcOnly && !drug.classId.startsWith('spc_')) return false;
-      if (quickFilters.pregnancySafe && drug.pregnancyRisk !== 'safe_first_line') return false;
-      if (quickFilters.renalSafe && drug.renalAdjustment.cutoff > 15) return false;
-      if (!q) return true;
-      const has = (s) => !!s && s.toLowerCase().includes(q);
-      return has(drug.nameEn) || has(drug.nameTh) || has(drug.genericName) ||
-        (drug.brandNames || []).some(has) || has(drug.classNameEn) || has(drug.classNameTh) ||
-        (drug.compellingIndications || []).some(has);
+    const q = searchTerm.toLowerCase().trim();
+    const has = (s) => !!s && s.toLowerCase().includes(q);
+    const catOf = (d) => (drugClasses.find((c) => c.id === d.classId) || {}).categoryId;
+    return drugsData.filter((d) => {
+      if (q && !(has(d.nameEn) || has(d.nameTh) || has(d.genericName) || (d.brandNames || []).some(has) || has(d.classNameEn) || has(d.classNameTh) || (d.compellingIndications || []).some(has))) return false;
+      if (nlemOnly && !d.nlem) return false;
+      if (bookmarksOnly && !bookmarkedIds.includes(d.id)) return false;
+      if (selectedCategory !== 'all' && catOf(d) !== selectedCategory) return false;
+      if (selectedClasses.length && !selectedClasses.includes(d.classId)) return false;
+      return clinical.every((k) => CLINICAL_TEST[k](d));
+    }).sort((a, b) => {
+      if (sortOrder === 'class') return a.classNameEn.localeCompare(b.classNameEn) || a.nameEn.localeCompare(b.nameEn);
+      if (sortOrder === 'nlem') return (b.nlem ? 1 : 0) - (a.nlem ? 1 : 0) || a.nameEn.localeCompare(b.nameEn);
+      return a.nameEn.localeCompare(b.nameEn);
     });
-  }, [searchQuery, selectedCategory, selectedClass, quickFilters, showBookmarksOnly, bookmarkedIds]);
+  }, [searchTerm, nlemOnly, bookmarksOnly, bookmarkedIds, selectedCategory, selectedClasses, clinical, sortOrder]);
 
-  const t = translations[lang];
-  const L = (obj, key) => (lang === 'th' && obj[key + 'Th'] ? obj[key + 'Th'] : obj[key + 'En']);
-  const g = guidelinesData;
-
-  const chip = (on, onCls, offHover) =>
-    `px-2.5 py-1 rounded-lg font-semibold border transition-colors ${on ? onCls : `bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 ${offHover}`}`;
-  const iconBtn = 'w-8 h-8 inline-flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-rose-400 transition-colors';
-
-  const TABS = [
-    { id: 'drugs', label: t.tabDrugs, icon: PillIcon },
-    { id: 'starting', label: t.tabStarting, icon: StethoscopeIcon },
-    { id: 'secondary', label: t.tabSecondary, icon: ZapIcon },
-    { id: 'resistant', label: t.tabResistant, icon: ActivityIcon },
-    { id: 'crises', label: t.tabCrises, icon: AlertTriangleIcon },
-    { id: 'comorbidities', label: t.tabComorbidities, icon: HeartPulseIcon },
-    { id: 'tools', label: t.tabTools, icon: GaugeIcon },
-    { id: 'references', label: t.tabReferences, icon: BookOpenIcon },
+  const catLabel = (c) => (lang === 'th' ? c.nameTh : c.nameEn).split('(')[0].trim();
+  const clsLabel = (c) => (lang === 'th' ? c.nameTh : c.nameEn).split('(')[0].trim();
+  const filterChips = [
+    ...(searchTerm.trim() ? [{ key: 'q', label: '"' + searchTerm.trim() + '"', off: () => setSearchTerm('') }] : []),
+    ...(nlemOnly ? [{ key: 'nlem', label: t.filterNlem, off: () => setNlemOnly(false) }] : []),
+    ...(bookmarksOnly ? [{ key: 'bm', label: L('ที่บันทึกไว้', 'Bookmarked'), off: () => setBookmarksOnly(false) }] : []),
+    ...(selectedCategory !== 'all' ? [{ key: 'cat', label: catLabel(drugCategories.find((c) => c.id === selectedCategory)), off: () => setSelectedCategory('all') }] : []),
+    ...selectedClasses.map((k) => ({ key: 'cls-' + k, label: clsLabel(drugClasses.find((c) => c.id === k)), off: () => toggleClass(k) })),
+    ...clinical.map((k) => ({ key: 'cf-' + k, label: CLINICAL.find((c) => c[0] === k)[1][lang], off: () => toggleClinical(k) })),
   ];
+  const activeFilterCount = filterChips.filter((c) => c.key !== 'q').length;
+
+  const segBox = 'flex flex-wrap bg-white dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 p-0.5 shadow-sm items-center min-h-[26px] md:min-h-[28px] gap-0.5 max-w-full';
+  const segLabel = 'pl-1 pr-0.5 text-[10px] font-bold text-slate-400 whitespace-nowrap';
+  const segBtn = 'min-h-[22px] md:min-h-[24px] px-1.5 md:px-2 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-all text-left';
+  const segOn = 'bg-slate-700 text-white shadow-sm dark:bg-slate-200 dark:text-slate-900';
+  const segOff = 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700';
+
+  const guideButton = ([k, name, short, tone, Icon], phone) => (
+    <button key={k} onClick={() => setOpenGuide(k)} data-guide={k} aria-label={name[lang]} title={name[lang]}
+      className={phone
+        ? `flex flex-col items-center justify-center gap-0.5 min-w-0 ${tone} border text-white px-0.5 py-1.5 rounded-lg font-bold shadow-sm active:scale-95 transition-all`
+        : `flex items-center justify-center gap-1.5 ${tone} border text-white px-3 py-2 rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs md:text-sm whitespace-nowrap`}>
+      <Icon className={phone ? 'w-4 h-4 shrink-0' : 'w-3.5 h-3.5 md:w-4 md:h-4 shrink-0'} />
+      <span className={phone ? 'text-[10px] leading-[1.15] text-center max-w-full break-words' : ''}>{phone ? short[lang] : name[lang]}</span>
+    </button>
+  );
+  const guide = GUIDES.find((x) => x[0] === openGuide);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0b1329] text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 sm:px-4 md:px-6 pt-3 md:pt-6 pb-32">
+      <div className="max-w-6xl mx-auto relative pt-10 md:pt-0" id="ht-list-page">
 
-      {/* ==================== TITLE BAR (always pinned) ==================== */}
-      <div className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:h-[60px]" data-title-bar>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 md:py-0 md:h-full flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-rose-500 text-white flex items-center justify-center p-1.5 shadow-md shrink-0">
-              <HeartPulseIcon className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight">
-                {t.appTitle}
-              </h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                <button
-                  onClick={() => setShowChangelog(true)}
-                  className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 hover:bg-rose-200 dark:hover:bg-rose-900"
-                  title={lang === 'th' ? 'บันทึกการเปลี่ยนแปลง' : 'Changelog'}
-                  data-version-badge
-                >
-                  {APP_VERSION}
-                </button>
-                <p className="hidden md:block text-[11px] text-slate-500 dark:text-slate-400 truncate">{t.appSubtitle}</p>
-              </div>
-            </div>
+        {/* Top-right controls: version, language, theme */}
+        <div className="absolute top-0 right-0 flex items-center gap-1.5 md:gap-2 z-20" data-top-controls>
+          <button onClick={() => setShowChangelog(true)} title={L('บันทึกการเปลี่ยนแปลง', 'Changelog')} data-version-badge
+            className="text-[10px] font-bold text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 shadow-sm px-2.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 hover:bg-slate-50 hover:text-teal-700 hover:border-teal-200 dark:hover:bg-slate-700 transition-all">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{APP_VERSION}
+          </button>
+          <button onClick={() => setLang(lang === 'th' ? 'en' : 'th')} title="Switch language" aria-label="Switch language" data-lang-toggle
+            className="text-[10px] md:text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm px-2.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+            {lang === 'th' ? 'ไทย' : 'EN'}
+          </button>
+          <button onClick={toggleTheme} aria-label={theme === 'dark' ? t.themeLight : t.themeDark} title={theme === 'dark' ? t.themeLight : t.themeDark} data-theme-toggle
+            className="w-7 h-7 text-slate-600 dark:text-amber-300 bg-white dark:bg-slate-800 shadow-sm rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+            {theme === 'dark' ? <SunIcon className="w-3.5 h-3.5" /> : <MoonIcon className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        <header className="mb-3 md:mb-4">
+          <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-800 dark:text-white mb-1 md:mb-2 leading-tight sm:pr-48">
+            {L('คู่มือการรักษาความดันโลหิตสูง', 'Thai HT Guide')} <span className="align-middle text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800">CPG 2567</span>
+          </h1>
+          <p className="hidden sm:block text-xs md:text-sm text-slate-600 dark:text-slate-300" data-subtitle>
+            {L('ยาลดความดันโลหิต 41 รายการและเครื่องมือข้างเตียง ตามแนวทางการรักษาโรคความดันโลหิตสูงในเวชปฏิบัติทั่วไป พ.ศ. 2567 และบัญชียาหลักแห่งชาติ 2569',
+              '41 blood-pressure medicines and bedside tools, based on the Thai Hypertension Society guideline B.E. 2567 (2024) and NLEM 2569.')}
+          </p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 sm:block" data-credit-line>
+            <p className="text-[10px] md:text-xs font-semibold text-indigo-500 dark:text-indigo-300 sm:mt-1">Made by Warodom Phaenthong, M.D.</p>
+            <a href="#disclaimer-heading" onClick={(e) => { e.preventDefault(); const el = document.getElementById('disclaimer-heading'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              className="block sm:mt-1 text-[11px] md:text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline">{L('ใช้ช่วยตัดสินใจเท่านั้น: อ่านข้อจำกัด', 'Decision support only: read the disclaimer')}</a>
+          </div>
+        </header>
+
+        {/* Phones: guides as two rows of icon tiles (scroll away with the page) */}
+        <div className="grid grid-cols-4 gap-1 sm:hidden mb-2" data-guide-buttons="phone">
+          {GUIDES.map((g) => guideButton(g, true))}
+        </div>
+
+        {/* Guides (tablet up) and the search row: pinned */}
+        <div className="sticky top-0 z-30 pt-2 pb-2 md:pt-3 md:pb-2.5 -mt-2 md:-mt-3 bg-slate-100 dark:bg-slate-950" data-search-bar>
+          <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-2 w-full mb-2" data-guide-buttons="wide">
+            {GUIDES.map((g) => guideButton(g, false))}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button onClick={() => setShowPatientSheet(true)} className={iconBtn} title={t.patientSheet} aria-label={t.patientSheet} data-patient-sheet>
-              <PrinterIcon className="w-4 h-4 text-rose-600" />
+          <div className="flex gap-2 md:gap-3 w-full h-9 md:h-10">
+            <button onClick={() => setSearchOpen(true)} aria-label={L('ค้นหา', 'Search')} title={L('ค้นหา', 'Search')} aria-expanded={searchOpen} data-search-open
+              className={`${searchOpen ? 'hidden' : 'flex sm:hidden'} shrink-0 h-full w-9 items-center justify-center rounded-lg border shadow-sm transition-colors ${searchTerm !== '' ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}>
+              <SearchIcon className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setShowBookmarksOnly((prev) => !prev)}
-              className={showBookmarksOnly ? 'w-8 h-8 inline-flex items-center justify-center rounded-full border bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700' : iconBtn}
-              title={t.bookmarks}
-              aria-label={t.bookmarks}
-              aria-pressed={showBookmarksOnly}
-            >
-              <BookmarkIcon className="w-4 h-4" />
-            </button>
-            <button onClick={toggleLang} className="h-8 inline-flex items-center gap-1 px-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-400 text-xs font-bold text-slate-700 dark:text-slate-200" title="Switch language" data-lang-toggle>
-              <GlobeIcon className="w-3.5 h-3.5 text-rose-600" />
-              <span>{lang === 'th' ? 'EN' : 'ไทย'}</span>
-            </button>
-            <button onClick={toggleTheme} className={iconBtn} title={theme === 'dark' ? t.themeLight : t.themeDark} aria-label={theme === 'dark' ? t.themeLight : t.themeDark} data-theme-toggle>
-              {theme === 'dark' ? <SunIcon className="w-4 h-4 text-amber-400" /> : <MoonIcon className="w-4 h-4 text-slate-600" />}
+            <div className={`${searchOpen ? 'block flex-1' : 'hidden sm:block'} relative min-w-0 sm:flex-none sm:w-[45%] md:w-[38%] lg:w-1/3 h-full`} data-search-box>
+              <input ref={searchRef} type="text" id="ht-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t.searchPlaceholder}
+                onBlur={() => setSearchOpen(false)} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-search
+                className="w-full h-full pl-3 pr-9 md:pl-4 md:pr-10 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-800 text-base sm:text-xs md:text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400" />
+              <SearchIcon className="hidden sm:block absolute right-2.5 md:right-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5 md:w-4 md:h-4 pointer-events-none" />
+              <button onMouseDown={(e) => e.preventDefault()} onClick={() => { setSearchTerm(''); setSearchOpen(false); if (searchRef.current) searchRef.current.blur(); }} aria-label={L('ล้างคำค้น', 'Clear search')} title={L('ล้างคำค้น', 'Clear search')}
+                className="flex sm:hidden absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"><XIcon className="w-4 h-4" /></button>
+            </div>
+
+            <div className={`${searchOpen ? 'hidden sm:block' : 'block'} relative flex-1 min-w-0 h-full`} data-sort>
+              <div className="absolute inset-y-0 left-0 pl-2 sm:pl-2.5 flex items-center pointer-events-none"><SortIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400" /></div>
+              <select id="ht-sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} aria-label={L('เรียงลำดับ', 'Sort')}
+                className="w-full h-full pl-6 pr-1 sm:pl-8 sm:pr-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-[11px] md:text-xs font-bold appearance-none cursor-pointer">
+                <option value="nameAsc">{L('ชื่อยา (A - Z)', 'Name (A - Z)')}</option>
+                <option value="class">{L('กลุ่มยา', 'Drug class')}</option>
+                <option value="nlem">{L('บัญชียาหลักก่อน', 'NLEM first')}</option>
+              </select>
+            </div>
+
+            <div className={`${searchOpen ? 'hidden sm:flex' : 'flex'} bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 shadow-sm shrink-0 items-center h-full`}>
+              <button onClick={() => setViewMode('grid')} aria-label={t.viewCard} title={t.viewCard} aria-pressed={viewMode === 'grid'}
+                className={`h-full px-2 md:px-2.5 rounded-md transition-colors flex items-center justify-center ${viewMode === 'grid' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>
+                <LayoutGridIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              </button>
+              <button onClick={() => setViewMode('list')} aria-label={t.viewList} title={t.viewList} aria-pressed={viewMode === 'list'} data-view-list
+                className={`h-full px-2 md:px-2.5 rounded-md transition-colors flex items-center justify-center ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>
+                <ListIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              </button>
+            </div>
+
+            <button onClick={() => setFiltersOpen((v) => !v)} aria-expanded={filtersOpen} aria-controls="filter-bar" aria-label={t.filters} title={t.filters} data-filters-toggle
+              className={`shrink-0 h-full px-2 md:px-3 rounded-lg border shadow-sm flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-bold whitespace-nowrap transition-colors ${activeFilterCount ? 'bg-teal-600 border-teal-600 text-white hover:bg-teal-500' : filtersOpen ? 'bg-slate-200 border-slate-300 text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}>
+              <FilterIcon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              <span className="max-[359px]:hidden">{t.filters}</span>{activeFilterCount > 0 && <span className="tabular-nums" data-filter-count>{activeFilterCount}</span>}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* ==================== SEARCH, FILTERS, TABS (pinned on wide screens only) ==================== */}
-      <header className="md:sticky md:top-[60px] z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        {activeTab === 'drugs' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-2.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
-                  data-search
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title={t.clearSearch}>
-                    <XIcon className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setShowFiltersDrawer((prev) => !prev)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors shadow-sm ${
-                    showFiltersDrawer || activeFiltersCount > 0
-                      ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-rose-400'
-                  }`}
-                >
-                  <FilterIcon className="w-3.5 h-3.5" />
-                  <span>{t.filters}</span>
-                  {activeFiltersCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">{activeFiltersCount}</span>
-                  )}
-                </button>
-                <div className="flex border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden p-0.5 bg-slate-100 dark:bg-slate-800">
-                  <button onClick={() => setViewMode('card')} className={`p-1.5 rounded-lg ${viewMode === 'card' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-300 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`} title={t.viewCard}>
-                    <LayoutGridIcon className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-300 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`} title={t.viewList}>
-                    <ListIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick filter chips: wrap onto more rows on narrow screens */}
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px]" data-quick-filters>
-              <button
-                onClick={clearAllFilters}
-                className={`px-2.5 py-1 rounded-lg font-bold border transition-colors ${
-                  activeFiltersCount === 0
-                    ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 border-slate-800 dark:border-white'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                }`}
-              >
-                {t.filterAll}
+        {/* Filter groups: compact segments that wrap; shown while opened with the Filters button */}
+        <div id="filter-bar" className={`${filtersOpen ? 'flex' : 'hidden'} flex-col gap-2 md:gap-2.5 pb-2 md:pb-3 mb-3 md:mb-4 border-b border-slate-200 dark:border-slate-800`} data-filter-bar>
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2 w-full min-w-0" data-filter-row="status">
+            <div className={segBox} data-nlem-group>
+              <button onClick={() => setNlemOnly((v) => !v)} aria-pressed={nlemOnly} title={L('บัญชียาหลักแห่งชาติ พ.ศ. 2569', 'Thai National List of Essential Medicines B.E. 2569')} data-nlem-filter
+                className={`${segBtn} whitespace-nowrap ${nlemOnly ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-700'}`}>
+                <CheckIcon className="w-2.5 h-2.5 md:w-3 md:h-3" /> {t.filterNlem}
               </button>
-              <button onClick={() => toggleQuick('firstLineOnly')} className={chip(quickFilters.firstLineOnly, 'bg-blue-600 text-white border-blue-600', 'hover:border-blue-400')}>{t.filterFirstLine}</button>
-              <button onClick={() => toggleQuick('spcOnly')} className={chip(quickFilters.spcOnly, 'bg-teal-600 text-white border-teal-600', 'hover:border-teal-400')}>{t.filterSpc}</button>
-              <button onClick={() => toggleQuick('nlemOnly')} className={chip(quickFilters.nlemOnly, 'bg-emerald-600 text-white border-emerald-600', 'hover:border-emerald-400')}>{t.filterNlem}</button>
-              <button onClick={() => toggleQuick('pregnancySafe')} className={chip(quickFilters.pregnancySafe, 'bg-rose-600 text-white border-rose-600', 'hover:border-rose-400')}>{t.filterPregnancySafe}</button>
-              <button onClick={() => toggleQuick('renalSafe')} className={chip(quickFilters.renalSafe, 'bg-indigo-600 text-white border-indigo-600', 'hover:border-indigo-400')}>{t.filterRenalSafe}</button>
+            </div>
+            <div className={segBox} data-bookmark-group>
+              <button onClick={() => setBookmarksOnly((v) => !v)} aria-pressed={bookmarksOnly} data-bookmark-filter
+                className={`${segBtn} whitespace-nowrap ${bookmarksOnly ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-slate-700'}`}>
+                <BookmarkIcon className="w-2.5 h-2.5 md:w-3 md:h-3" /> {L('ที่บันทึกไว้', 'Bookmarked')}
+                <span className="opacity-60 tabular-nums">{bookmarkedIds.length}</span>
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Main tabs: wrap instead of scrolling sideways */}
-        <div className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 sm:px-6">
-          <nav className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-1 text-xs sm:text-sm font-bold" data-main-tabs>
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
+          <div className={segBox} role="group" aria-label={L('ประเภทยา', 'Drug type')} data-filter-row="type">
+            <span className={segLabel}>{L('ประเภท', 'Type')}:</span>
+            <button onClick={() => selectCategory('all')} aria-pressed={selectedCategory === 'all'} className={`${segBtn} ${selectedCategory === 'all' ? segOn : segOff}`}>{L('ทั้งหมด', 'All')}</button>
+            {drugCategories.map((cat) => {
+              const on = selectedCategory === cat.id;
+              const n = drugsData.filter((d) => classesOf(cat.id).some((c) => c.id === d.classId)).length;
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  data-tab={tab.id}
-                  className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-rose-600 text-rose-600 dark:text-rose-400 dark:border-rose-400 bg-white dark:bg-slate-800 rounded-t-lg'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{tab.label}</span>
+                <button key={cat.id} onClick={() => selectCategory(cat.id)} aria-pressed={on} className={`${segBtn} ${on ? segOn : segOff}`}>
+                  {catLabel(cat)} <span className="opacity-60 tabular-nums">{n}</span>
                 </button>
               );
             })}
-          </nav>
-        </div>
-      </header>
+          </div>
 
-      {/* ==================== MAIN CONTENT ==================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6" id="main-app-container">
-
-        {/* TAB 1: DRUG DIRECTORY */}
-        {activeTab === 'drugs' && (
-          <div className="space-y-5">
-            {showFiltersDrawer && (
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <SlidersIcon className="w-4 h-4 text-rose-600" />
-                    <span>{lang === 'th' ? 'กรองตามกลุ่มยา' : 'Filter by drug class'}</span>
-                  </h4>
-                  <button onClick={clearAllFilters} className="text-xs text-rose-600 hover:underline font-semibold">{t.clearAllFilters}</button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">{lang === 'th' ? 'หมวดหมู่หลัก:' : 'Main category:'}</label>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => { setSelectedCategory(e.target.value); setSelectedClass('all'); }}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="all">{t.allCategories}</option>
-                      {drugCategories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{lang === 'th' ? cat.nameTh : cat.nameEn}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">{lang === 'th' ? 'กลุ่มทางเภสัชวิทยา:' : 'Drug class:'}</label>
-                    <select
-                      value={selectedClass}
-                      onChange={(e) => setSelectedClass(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="all">{lang === 'th' ? 'ทุกกลุ่ม' : 'All classes'}</option>
-                      {drugClasses
-                        .filter((c) => selectedCategory === 'all' || c.categoryId === selectedCategory)
-                        .map((cls) => (
-                          <option key={cls.id} value={cls.id}>{lang === 'th' ? cls.nameTh : cls.nameEn}</option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 px-1">
-              <span data-result-count>
-                {lang === 'th'
-                  ? `แสดง ${filteredDrugs.length} จาก ${drugsData.length} รายการยา`
-                  : `Showing ${filteredDrugs.length} of ${drugsData.length} medications`}
-                {activeFiltersCount > 0 && ` (${t.activeFilters}: ${activeFiltersCount})`}
-              </span>
-              {bookmarkedIds.length > 0 && (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                  ★ {bookmarkedIds.length} {lang === 'th' ? 'รายการที่บันทึก' : 'bookmarked'}
-                </span>
-              )}
+          {(selectedCategory !== 'all' || selectedClasses.length > 0) && (
+            <div className={segBox} role="group" aria-label={L('กลุ่มยา', 'Drug class')} data-filter-row="class">
+              <span className={segLabel}>{L('กลุ่ม', 'Class')}:</span>
+              {classesOf(selectedCategory).map((cls) => {
+                const on = selectedClasses.includes(cls.id);
+                return (
+                  <button key={cls.id} onClick={() => toggleClass(cls.id)} aria-pressed={on}
+                    className={`${segBtn} ${on ? 'bg-slate-800 text-white shadow-sm dark:bg-white dark:text-slate-900' : segOff}`}>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cls.color }} />
+                    {clsLabel(cls)}
+                  </button>
+                );
+              })}
             </div>
+          )}
 
-            {filteredDrugs.length === 0 ? (
-              <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                <PillIcon className="w-12 h-12 text-slate-300 mx-auto" />
-                <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">
-                  {lang === 'th' ? 'ไม่พบรายการยาที่ตรงกับเงื่อนไข' : 'No medications match your filters'}
-                </h4>
-                <button onClick={clearAllFilters} className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-500 shadow-sm">{t.clearAllFilters}</button>
-              </div>
-            ) : viewMode === 'card' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" data-drug-grid>
-                {filteredDrugs.map((drug) => (
-                  <DrugCard
-                    key={drug.id}
-                    drug={drug}
-                    lang={lang}
-                    isCompared={comparedIds.includes(drug.id)}
-                    onToggleCompare={toggleCompare}
-                    onSelectDetail={setDetailDrug}
-                    isBookmarked={bookmarkedIds.includes(drug.id)}
-                    onToggleBookmark={toggleBookmark}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2" data-drug-list>
-                {filteredDrugs.map((drug) => (
-                  <DrugListRow
-                    key={drug.id}
-                    drug={drug}
-                    lang={lang}
-                    isCompared={comparedIds.includes(drug.id)}
-                    onToggleCompare={toggleCompare}
-                    onSelectDetail={setDetailDrug}
-                    isBookmarked={bookmarkedIds.includes(drug.id)}
-                    onToggleBookmark={toggleBookmark}
-                  />
-                ))}
-              </div>
-            )}
+          <div className={segBox} role="group" aria-label={L('ข้อพิจารณาทางคลินิก', 'Clinical')} data-filter-row="clinical">
+            <span className={segLabel}>{L('คลินิก', 'Clinical')}:</span>
+            {CLINICAL.map(([k, label, onCls, offCls]) => {
+              const on = clinical.includes(k);
+              return (
+                <button key={k} onClick={() => toggleClinical(k)} aria-pressed={on} data-clinical={k} className={`${segBtn} ${on ? onCls : offCls}`}>
+                  {on && <CheckIcon className="w-2.5 h-2.5" />}{label[lang]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active filter chips, then the result count */}
+        <div className={`${filtersOpen ? '' : 'mt-1 md:mt-1.5'} mb-2 md:mb-3 px-0.5`}>
+          {filterChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-1.5" role="group" data-active-filters>
+              <button onClick={resetFilters} title={t.clearAllFilters} data-clear-filters
+                className="shrink-0 min-h-[26px] px-2.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300 shadow-sm inline-flex items-center gap-1 text-[11px] font-bold whitespace-nowrap transition-colors">
+                <XIcon className="w-3 h-3" /> {L('ล้าง', 'Clear')}
+              </button>
+              {filterChips.map((c) => (
+                <button key={c.key} onClick={c.off} title={L('เอาออก: ', 'Remove: ') + c.label} aria-label={L('เอาออก: ', 'Remove: ') + c.label} data-chip={c.key}
+                  className="max-w-full min-h-[26px] inline-flex items-center gap-1 pl-2.5 pr-1.5 py-0.5 rounded-full border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 dark:border-teal-900 dark:bg-teal-950 dark:text-teal-300 text-[11px] font-bold leading-tight text-left transition-colors">
+                  <span className="break-words min-w-0">{c.label}</span><XIcon className="w-3 h-3 shrink-0 opacity-60" />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400" aria-live="polite" data-result-count>
+            {L('แสดง', 'Showing')} <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums">{filteredDrugs.length}</span> {L('จาก', 'of')} <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums">{drugsData.length}</span> {L('รายการยา', 'medicines')}
+          </div>
+        </div>
+
+        {filteredDrugs.length === 0 ? (
+          <div className="py-12 md:py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl md:rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed">
+            <SearchIcon className="w-8 h-8 md:w-10 md:h-10 text-slate-300 mx-auto mb-3 md:mb-4" />
+            <p className="text-base md:text-lg font-medium">{L('ไม่พบรายการยาที่ตรงกับเงื่อนไข', 'No medicines match these filters')}</p>
+            <button onClick={resetFilters} className="mt-2 text-teal-700 dark:text-teal-300 hover:underline text-sm md:text-base">{t.clearAllFilters}</button>
+          </div>
+        ) : (
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5' : 'flex flex-col gap-2 md:gap-3'} data-drug-grid>
+            {filteredDrugs.map((drug) => {
+              const Comp = viewMode === 'grid' ? DrugCard : DrugListRow;
+              return (
+                <Comp key={drug.id} drug={drug} lang={lang} isCompared={comparedIds.includes(drug.id)} onToggleCompare={toggleCompare} onSelectDetail={setDetailDrug}
+                  isBookmarked={bookmarkedIds.includes(drug.id)} onToggleBookmark={toggleBookmark} />
+              );
+            })}
           </div>
         )}
 
-        {/* TAB 2: CLASSIFICATION, STARTING DRUGS & TARGETS */}
-        {activeTab === 'starting' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
+        <DisclaimerSection lang={lang} />
+        <ReferencesSection lang={lang} />
+        <p className="mt-6 text-center text-[11px] text-slate-500 dark:text-slate-400">
+          <button onClick={() => setShowChangelog(true)} className="underline">{APP_VERSION}</button> · {L('สำหรับบุคลากรทางการแพทย์', 'For healthcare professionals')}
+        </p>
+      </div>
 
-            <Fold id="start-class" tone="sky" icon={GaugeIcon} defaultOpen title={lang === 'th' ? g.bpClassification.titleTh : g.bpClassification.titleEn} badge={lang === 'th' ? 'ตารางที่ 5' : 'Table 5'}>
-              <p className="text-xs text-rose-700 dark:text-rose-400 font-semibold">{t.bpAtRiskNote}</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs sm:text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
-                      <th className="p-2.5 font-bold">{lang === 'th' ? 'ระดับ' : 'Category'}</th>
-                      <th className="p-2.5 font-bold font-mono">SBP</th>
-                      <th className="p-2.5 font-bold font-mono">DBP</th>
-                      <th className="p-2.5 font-bold hidden sm:table-cell">{lang === 'th' ? 'สิ่งที่ควรทำ' : 'What to do'}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {g.bpClassification.table5_clinic.map((row, i) => (
-                      <tr key={i} className={row.isNew2024 ? 'bg-amber-50 dark:bg-amber-950/30' : ''}>
-                        <td className="p-2.5 font-bold text-slate-900 dark:text-white">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${DOT_COLOUR[row.color] || 'bg-slate-400'}`}></span>
-                            <span>{lang === 'th' ? row.categoryTh : row.categoryEn}</span>
-                          </div>
-                          <p className="sm:hidden mt-1 font-normal text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">{lang === 'th' ? row.actionTh : row.actionEn}</p>
-                        </td>
-                        <td className="p-2.5 font-mono font-bold whitespace-nowrap">{row.sbp}</td>
-                        <td className="p-2.5 font-mono font-bold whitespace-nowrap">{row.dbp}</td>
-                        <td className="p-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed hidden sm:table-cell">{lang === 'th' ? row.actionTh : row.actionEn}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Fold>
+      <CompareDrawer comparedDrugs={comparedDrugs} lang={lang} onOpenCompare={() => setShowCompareModal(true)} onClearCompare={() => setComparedIds([])} onRemoveDrug={(id) => setComparedIds((p) => p.filter((x) => x !== id))} />
 
-            <Fold id="start-oob" tone="teal" icon={HomeIcon} title={lang === 'th' ? 'เกณฑ์วินิจฉัยตามวิธีวัด และรูปแบบความดันกลางคืน' : 'Diagnostic thresholds by method, and night-time patterns'} badge={lang === 'th' ? 'ตารางที่ 3, 6' : 'Tables 3, 6'}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {g.bpClassification.table6_modalities.map((m, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <strong className="text-slate-900 dark:text-white">{lang === 'th' ? m.modalityTh : m.modalityEn}</strong>
-                      <span className="font-mono font-black text-teal-700 dark:text-teal-300">&ge; {m.sbpCutoff}/{m.dbpCutoff}</span>
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-300">{lang === 'th' ? m.noteTh : m.noteEn}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {g.bpClassification.diurnalPatterns.map((p, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
-                    <strong className="block text-slate-900 dark:text-white">{lang === 'th' ? p.patternTh : p.patternEn}</strong>
-                    <span className="text-slate-600 dark:text-slate-300">{lang === 'th' ? p.dropTh : p.dropEn}</span>
-                    <span className="block text-teal-700 dark:text-teal-300 font-semibold">{lang === 'th' ? p.cvRiskTh : p.cvRiskEn}</span>
-                  </div>
-                ))}
-              </div>
-            </Fold>
-
-            <Fold id="start-when" tone="amber" icon={InfoIcon} title={lang === 'th' ? 'เมื่อใดควรเริ่มยา' : 'When to start drugs'} badge={lang === 'th' ? 'ตารางที่ 9' : 'Table 9'}>
-              <div className="space-y-2">
-                {g.startingGuide.whenToStart.map((w, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs space-y-1">
-                    <strong className="block text-slate-900 dark:text-white">{lang === 'th' ? w.conditionTh : w.conditionEn}</strong>
-                    <p className="text-slate-700 dark:text-slate-300">{lang === 'th' ? w.thresholdTh : w.thresholdEn}</p>
-                    <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300">{w.classLevel}</span>
-                  </div>
-                ))}
-              </div>
-            </Fold>
-
-            <Fold id="start-strategy" tone="rose" icon={StethoscopeIcon} title={t.strategyTitle} badge={lang === 'th' ? 'ตารางที่ 12' : 'Table 12'}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {g.startingGuide.strategyRules.map((rule, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{lang === 'th' ? rule.titleTh : rule.titleEn}</h4>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">{rule.classLevel}</span>
-                    </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{lang === 'th' ? rule.ruleTh : rule.ruleEn}</p>
-                  </div>
-                ))}
-              </div>
-            </Fold>
-
-            <Fold id="start-targets" tone="emerald" icon={HospitalIcon} title={lang === 'th' ? 'ความดันเป้าหมาย' : 'Target blood pressure'} badge={lang === 'th' ? 'ตารางที่ 10, 11' : 'Tables 10, 11'}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-1">
-                    <HospitalIcon className="w-4 h-4 text-emerald-600" /> {t.clinicBpGoals}
-                  </h4>
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
-                    {g.startingGuide.targetsClinic.map((target, idx) => (
-                      <div key={idx} className="py-2.5 flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block">{lang === 'th' ? target.ageTh : target.ageEn}</span>
-                          <span className="text-[10px] text-slate-500">{target.classLevel}</span>
-                        </div>
-                        <span className="font-mono font-black text-xs px-2.5 py-1 rounded bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300">{lang === 'th' ? target.targetTh : target.targetEn}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-1">
-                    <HomeIcon className="w-4 h-4 text-emerald-600" /> {t.homeBpGoals}
-                  </h4>
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
-                    {g.startingGuide.targetsHome.map((target, idx) => (
-                      <div key={idx} className="py-2.5 flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block">{lang === 'th' ? target.groupTh : target.groupEn}</span>
-                          <span className="text-[10px] text-slate-500">{target.classLevel}</span>
-                        </div>
-                        <span className="font-mono font-black text-xs px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">{lang === 'th' ? target.targetTh : target.targetEn}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-900 flex items-start gap-3">
-                <AlertTriangleIcon className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-rose-800 dark:text-rose-300">{t.neverHarmRule}</p>
-              </div>
-            </Fold>
-          </div>
-        )}
-
-        {/* TAB 3: SECONDARY HT */}
-        {activeTab === 'secondary' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
-            <Fold id="sec-when" tone="violet" icon={InfoIcon} defaultOpen title={t.whenToWorkup} badge={lang === 'th' ? 'ตารางที่ 36' : 'Table 36'}>
-              <ul className="list-disc pl-5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-1">
-                {g.secondaryHT.whenToSuspect.map((w, i) => (
-                  <li key={i}>{lang === 'th' ? w.th : w.en}</li>
-                ))}
-              </ul>
-            </Fold>
-            {g.secondaryHT.etiologies.map((et, i) => (
-              <Fold key={et.id} id={'sec-' + et.id} tone={TONE_CYCLE[i % TONE_CYCLE.length]} icon={ZapIcon} title={lang === 'th' ? et.nameTh : et.nameEn}>
-                {et.prevalenceEn && <p className="text-[11px] font-bold text-slate-500">{L(et, 'prevalence')}</p>}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed">
-                  <div>
-                    <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">{lang === 'th' ? 'ลักษณะที่ต้องสงสัย:' : 'Clinical clues:'}</strong>
-                    <p className="text-slate-600 dark:text-slate-300">{L(et, 'clinicalClues')}</p>
-                  </div>
-                  <div>
-                    <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">{lang === 'th' ? 'การตรวจคัดกรอง:' : 'Screening test:'}</strong>
-                    <p className="text-slate-600 dark:text-slate-300">{L(et, 'screeningTest')}</p>
-                  </div>
-                </div>
-                {et.preTestPrepEn && (
-                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
-                    <strong>{lang === 'th' ? 'การเตรียมก่อนตรวจ: ' : 'Before the test: '}</strong>{L(et, 'preTestPrep')}
-                  </div>
-                )}
-                {et.confirmatoryEn && (
-                  <p className="text-xs text-slate-700 dark:text-slate-300"><strong>{lang === 'th' ? 'การยืนยัน: ' : 'Confirmation: '}</strong>{L(et, 'confirmatory')}</p>
-                )}
-                {et.imagingEn && (
-                  <p className="text-xs text-slate-700 dark:text-slate-300"><strong>{lang === 'th' ? 'ภาพถ่ายรังสี: ' : 'Imaging: '}</strong>{L(et, 'imaging')}</p>
-                )}
-                <p className="text-xs text-slate-700 dark:text-slate-300"><strong>{lang === 'th' ? 'การรักษา: ' : 'Treatment: '}</strong>{L(et, 'treatment')}</p>
-              </Fold>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 4: RESISTANT & REFRACTORY HT */}
-        {activeTab === 'resistant' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
-            <Fold id="res-def" tone="rose" icon={ActivityIcon} defaultOpen title={t.resistantHtTitle} badge={lang === 'th' ? 'ภาพที่ 4' : 'Figure 4'}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 space-y-1">
-                  <span className="text-xs font-bold text-rose-800 dark:text-rose-300 block">{lang === 'th' ? 'Resistant hypertension' : 'Resistant hypertension'}</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{L(g.resistantHT.definitions, 'resistant')}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-900 space-y-1">
-                  <span className="text-xs font-bold text-violet-800 dark:text-violet-300 block">{lang === 'th' ? 'Refractory hypertension' : 'Refractory hypertension'}</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{L(g.resistantHT.definitions, 'refractory')}</p>
-                </div>
-              </div>
-            </Fold>
-            <Fold id="res-pseudo" tone="amber" icon={InfoIcon} title={t.pseudoResistantCheck}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {g.resistantHT.pseudoResistanceChecklist.map((item) => (
-                  <div key={item.id} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">{L(item, 'text')}</div>
-                ))}
-              </div>
-            </Fold>
-            {g.resistantHT.stepwiseAlgorithm.map((step, i) => (
-              <Fold key={step.step} id={'res-step-' + step.step} tone={['emerald', 'sky', 'violet', 'indigo'][i] || 'slate'} icon={ActivityIcon} title={lang === 'th' ? step.titleTh : step.titleEn} badge={lang === 'th' ? 'ภาพที่ 6' : 'Figure 6'}>
-                <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-                  {(lang === 'th' ? step.actionsTh : step.actionsEn).map((act, k) => (
-                    <li key={k} className="leading-relaxed">{act}</li>
-                  ))}
-                </ul>
-              </Fold>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 5: HYPERTENSIVE CRISES */}
-        {activeTab === 'crises' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
-            <Fold id="cri-types" tone="rose" icon={AlertTriangleIcon} defaultOpen title={t.crisesTitle}>
-              <p className="text-xs text-slate-700 dark:text-slate-300">{L(g.hypertensiveCrises, 'overview')}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-rose-600 text-white font-bold text-xs">EMERGENCY</span>
-                    <h4 className="font-bold text-rose-900 dark:text-rose-200">Hypertensive emergency</h4>
-                  </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{t.emergencyDesc}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-amber-600 text-white font-bold text-xs">PSH</span>
-                    <h4 className="font-bold text-amber-900 dark:text-amber-200">Pre-critical symptomatic hypertension</h4>
-                  </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{t.pshDesc}</p>
-                </div>
-              </div>
-            </Fold>
-            <Fold id="cri-psh" tone="amber" icon={InfoIcon} title={L(g.hypertensiveCrises.pshProtocol, 'name')} badge={lang === 'th' ? 'ตารางที่ 42' : 'Table 42'}>
-              <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-                {(lang === 'th' ? g.hypertensiveCrises.pshProtocol.principlesTh : g.hypertensiveCrises.pshProtocol.principles).map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
-            </Fold>
-            {g.hypertensiveCrises.table41_emergencySyndromes.map((syn, idx) => (
-              <Fold key={idx} id={'cri-syn-' + idx} tone={TONE_CYCLE[idx % TONE_CYCLE.length]} icon={AlertTriangleIcon} title={L(syn, 'syndrome')}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">{lang === 'th' ? 'เป้าหมายความดัน:' : 'Target BP:'}</strong>
-                    <span className="font-bold text-rose-700 dark:text-rose-300">{L(syn, 'bpTarget')}</span>
-                  </div>
-                  <div>
-                    <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">{lang === 'th' ? 'ระยะเวลา:' : 'Timing:'}</strong>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{L(syn, 'timeline')}</span>
-                  </div>
-                </div>
-                <p className="text-xs"><strong className="text-slate-700 dark:text-slate-300">{lang === 'th' ? 'ยาที่แนะนำ: ' : 'Recommended drugs: '}</strong><span className="text-slate-800 dark:text-slate-200">{L(syn, 'firstLineMeds')}</span></p>
-                <p className="text-[11px] text-rose-900 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900">
-                  <strong>{lang === 'th' ? 'ข้อควรระวัง: ' : 'Caution: '}</strong>{L(syn, 'caution')}
-                </p>
-              </Fold>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 6: COMORBIDITIES */}
-        {activeTab === 'comorbidities' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
-            {g.specialPopulations.map((pop, i) => (
-              <Fold key={pop.id} id={'pop-' + pop.id} tone={TONE_CYCLE[i % TONE_CYCLE.length]} icon={HeartPulseIcon} defaultOpen={i === 0} title={lang === 'th' ? pop.nameTh : pop.nameEn}>
-                <p className="text-xs"><strong className="text-slate-700 dark:text-slate-300">{lang === 'th' ? 'เป้าหมาย: ' : 'Target: '}</strong><span className="font-mono font-bold text-rose-700 dark:text-rose-300">{L(pop, 'target')}</span></p>
-                <div className="text-xs space-y-1">
-                  <strong className="text-slate-700 dark:text-slate-300 block">{lang === 'th' ? 'ยาที่แนะนำ:' : 'Preferred drugs:'}</strong>
-                  <p className="text-slate-800 dark:text-slate-200 font-semibold">{L(pop, 'firstChoice')}</p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-950 dark:text-teal-200">
-                  <strong>{lang === 'th' ? 'ข้อควรทราบ: ' : 'Note: '}</strong>{L(pop, 'pearl')}
-                </div>
-              </Fold>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 7: TOOLS */}
-        {activeTab === 'tools' && <ClinicalTools lang={lang} />}
-
-        {/* TAB 8: REFERENCES */}
-        {activeTab === 'references' && (
-          <div className="space-y-4">
-            <FoldAllBar lang={lang} />
-            <Fold id="ref-sources" tone="sky" icon={BookOpenIcon} defaultOpen title={lang === 'th' ? 'แหล่งข้อมูลของแอปนี้' : 'Sources used in this app'}>
-              <ul className="space-y-2 text-xs sm:text-sm">
-                {['cpg', 'cpgEn', 'nlem', 'dailymed'].map((k) => (
-                  <li key={k}>
-                    <a href={SOURCES[k].url} target="_blank" rel="noopener noreferrer" className="text-sky-700 dark:text-sky-300 underline break-words">{SOURCES[k][lang]}</a>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                {lang === 'th'
-                  ? 'ตาราง หน้า และระดับคำแนะนำในแอปอ้างอิงฉบับภาษาไทย (เลขหน้าตามที่พิมพ์) ข้อความที่มีเครื่องหมาย [ไม่มีในแนวทางฯ 2567] ไม่ได้มาจากแนวทางฯ ราคา รูปยา และชื่อการค้ายังไม่มีแหล่งข้อมูล'
-                  : 'Tables, pages and grades refer to the Thai edition (printed page numbers). Text marked [Not in Thai CPG 2567] does not come from the guideline. Prices, drug pictures and brand names have no recorded source yet.'}
-              </p>
-            </Fold>
-            <Fold id="ref-grades" tone="emerald" icon={InfoIcon} title={lang === 'th' ? 'ระดับคำแนะนำและคุณภาพหลักฐาน' : 'Strength of recommendation and quality of evidence'}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-700 dark:text-slate-300">
-                <ul className="space-y-1.5">
-                  <li><strong className="text-emerald-700 dark:text-emerald-400">I:</strong> {lang === 'th' ? 'ควรปฏิบัติ (น่าเชื่อถือ มีประโยชน์ คุ้มค่า)' : 'Should be practised (reliable, beneficial, worthwhile)'}</li>
-                  <li><strong className="text-teal-700 dark:text-teal-400">IIa:</strong> {lang === 'th' ? 'น่าปฏิบัติ' : 'Could be practised'}</li>
-                  <li><strong className="text-amber-700 dark:text-amber-400">IIb:</strong> {lang === 'th' ? 'อาจปฏิบัติ' : 'May be practised'}</li>
-                  <li><strong className="text-rose-700 dark:text-rose-400">III:</strong> {lang === 'th' ? 'ไม่ควรหรือห้ามปฏิบัติ (ไม่มีประโยชน์ อาจเป็นอันตราย)' : 'Should not / must not be practised (no benefit, may harm)'}</li>
-                </ul>
-                <ul className="space-y-1.5">
-                  <li><strong className="text-blue-700 dark:text-blue-400">A:</strong> {lang === 'th' ? 'RCT คุณภาพดีหลายการศึกษา หรือ meta-analysis' : 'Several high-quality RCTs or meta-analyses'}</li>
-                  <li><strong className="text-indigo-700 dark:text-indigo-400">B:</strong> {lang === 'th' ? 'RCT คุณภาพดีอย่างน้อย 1 การศึกษา หรือการศึกษาขนาดใหญ่ที่ไม่ใช่ RCT' : 'At least one high-quality RCT, or a large non-randomised study'}</li>
-                  <li><strong className="text-slate-700 dark:text-slate-300">C:</strong> {lang === 'th' ? 'การศึกษาอื่น ทะเบียนข้อมูล หรือความเห็นผู้เชี่ยวชาญ' : 'Other studies, registries or expert opinion'}</li>
-                </ul>
-              </div>
-            </Fold>
-            <Fold id="ref-trials" tone="violet" icon={BookOpenIcon} title={lang === 'th' ? 'การศึกษาที่แนวทางฯ อ้างถึง' : 'Trials named in the Thai CPG'}>
-              <div className="space-y-2 text-xs">
-                {[
-                  { name: 'SPRINT (2015)', cite: 'SPRINT Research Group. N Engl J Med 2015;373:2103-2116. Intensive SBP target < 120 mmHg reduced the primary CV outcome by 25%.' },
-                  { name: 'STEP (2021)', cite: 'Zhang W, et al. N Engl J Med 2021;385:1268-1279. SBP 110-129 mmHg in older Chinese patients reduced CV events.' },
-                  { name: 'PATHWAY-2 (2015)', cite: 'Williams B, et al. Lancet 2015;386:2059-2068. Spironolactone was the most effective add-on drug in resistant hypertension.' },
-                  { name: 'START study (2023)', cite: 'Schmieder RE, et al. Hypertension 2023;80:1127-1135. Single-pill combinations: better persistence, fewer CV events and lower all-cause mortality than the same drugs as separate pills.' },
-                  { name: 'TIME (2022)', cite: 'Mackenzie IS, et al. Lancet 2022;400:1417-1425. Evening vs morning dosing: no difference in major CV outcomes.' },
-                  { name: 'PARAGON-HF sub-study (2021)', cite: 'Jackson AM, et al. Eur Heart J 2021;42:3741-3752. Sacubitril/valsartan for apparent resistant hypertension in HFpEF.' },
-                  { name: 'SELECT (2023)', cite: 'Lincoff AM, et al. N Engl J Med 2023;389:2221-2232. Semaglutide 2.4 mg weekly in obesity with ASCVD reduced CV events.' },
-                ].map((ref, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">{ref.name}</strong>
-                    <p className="text-slate-600 dark:text-slate-300 text-[11px]">{ref.cite}</p>
-                  </div>
-                ))}
-                <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700">
-                  <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">{lang === 'th' ? 'อ้างถึงในแอป (ไม่ได้ระบุชื่อในแนวทางฯ)' : 'Referred to in this app (not named in the CPG)'}</strong>
-                  <p className="text-slate-600 dark:text-slate-300 text-[11px]">CLICK (2021): Agarwal R, et al. N Engl J Med 2021;385:2507-2519. Chlorthalidone in stage 4 CKD (eGFR 15-30).</p>
-                </div>
-              </div>
-            </Fold>
-          </div>
-        )}
-      </main>
-
-      {/* ==================== WINDOWS ==================== */}
+      {guide && guide[0] === 'sheet' && <PatientSheetModal lang={lang} onClose={() => setOpenGuide(null)} />}
+      {guide && guide[0] !== 'sheet' && (
+        <GuideWindow id={guide[0]} title={guide[1][lang]} icon={guide[4]} tone={guide[3].split(' ')[0]} lang={lang} onClose={() => setOpenGuide(null)}>
+          <GuideBody id={guide[0]} lang={lang} />
+        </GuideWindow>
+      )}
       {detailDrug && (
-        <DrugDetailModal
-          drug={detailDrug}
-          lang={lang}
-          onClose={() => setDetailDrug(null)}
-          onToggleCompare={toggleCompare}
-          isCompared={comparedIds.includes(detailDrug.id)}
-        />
+        <DrugDetailModal drug={detailDrug} lang={lang} onClose={() => setDetailDrug(null)} onToggleCompare={toggleCompare} isCompared={comparedIds.includes(detailDrug.id)} />
       )}
       {showCompareModal && (
-        <CompareModal comparedDrugs={comparedDrugs} lang={lang} onClose={() => setShowCompareModal(false)} onRemoveDrug={removeCompared} />
+        <CompareModal comparedDrugs={comparedDrugs} lang={lang} onClose={() => setShowCompareModal(false)} onRemoveDrug={(id) => setComparedIds((p) => p.filter((x) => x !== id))} />
       )}
-      <CompareDrawer
-        comparedDrugs={comparedDrugs}
-        lang={lang}
-        onOpenCompare={() => setShowCompareModal(true)}
-        onClearCompare={clearCompared}
-        onRemoveDrug={removeCompared}
-      />
-      {showPatientSheet && <PatientSheetModal lang={lang} onClose={() => setShowPatientSheet(false)} />}
       {showChangelog && <ChangelogModal lang={lang} onClose={() => setShowChangelog(false)} />}
-
-      {/* ==================== FOOTER ==================== */}
-      <footer className={`mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 ${comparedDrugs.length ? 'pb-28 sm:pb-6' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p className="font-semibold text-slate-600 dark:text-slate-400">{t.appTitle} - {t.appSubtitle}</p>
-          <p className="text-[11px]">
-            <button onClick={() => setShowChangelog(true)} className="underline">{APP_VERSION}</button> &bull; {lang === 'th' ? 'สำหรับบุคลากรทางการแพทย์ ใช้ประกอบการตัดสินใจทางคลินิก' : 'For healthcare professionals; supports, not replaces, clinical judgement'}
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

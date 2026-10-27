@@ -36,6 +36,7 @@ async function buildJs() {
     'components-modals.js',
     'components-modals-2.js',
     'components-tools.js',
+    'components-guides.js',
     'app.jsx'
   ];
   const fullJsx = files.map(f => {

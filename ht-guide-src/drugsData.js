@@ -725,8 +725,8 @@ const drugsData = [
     "brandsVerified": false,
     "thaiGuidelineClassTh": "ระดับ I, หลักฐาน A (ตารางที่ 12: ยา 5 กลุ่มหลัก)",
     "label": {
-      "name": "Telmisartan tablets (US label)",
-      "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=dd2b0604-f887-40d9-9109-dafcc9987e4e"
+      "name": "Micardis (EU product information)",
+      "url": "https://www.ema.europa.eu/en/documents/product-information/micardis-epar-product-information_en.pdf"
     }
   },
   {
@@ -2050,8 +2050,8 @@ const drugsData = [
     "brandsVerified": false,
     "thaiGuidelineClassTh": "ระดับ I, หลักฐาน A (ตารางที่ 12: เริ่มยา 2 ชนิด แนะนำยารวมเม็ด)",
     "label": {
-      "name": "Telmisartan and amlodipine, Mylan (US label)",
-      "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ca60a4d5-ace7-4889-94ee-e2265fd63811"
+      "name": "Twynsta (EU product information)",
+      "url": "https://www.ema.europa.eu/en/documents/product-information/twynsta-epar-product-information_en.pdf"
     }
   },
   {

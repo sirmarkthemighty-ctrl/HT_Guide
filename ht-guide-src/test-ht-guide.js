@@ -35,7 +35,7 @@ function dataChecks() {
 
   check('41 drugs', d.length === 41, d.length);
   check('every drug has a label entry (object or null)', d.every((x) => 'label' in x), d.filter((x) => !('label' in x)).map((x) => x.id).join());
-  check('label links point to DailyMed', d.every((x) => !x.label || x.label.url.startsWith('https://dailymed.nlm.nih.gov/')));
+  check('label links point to DailyMed or EMA', d.every((x) => !x.label || x.label.url.startsWith('https://dailymed.nlm.nih.gov/') || x.label.url.startsWith('https://www.ema.europa.eu/')));
   check('NLEM codes are b / s / ex / null', d.every((x) => [null, 'b', 's', 'ex'].includes(x.nlemCode) && x.nlem === !!x.nlemCode));
   const notListed = ['ramipril', 'valsartan', 'telmisartan', 'bisoprolol', 'indapamide', 'chlorthalidone', 'sacubitril_valsartan', 'empagliflozin', 'clonidine', 'spc_losartan_hctz'];
   check('NLEM 2569: drugs not on the HT list are not tagged', notListed.every((id) => by[id].nlem === false), notListed.filter((id) => by[id].nlem).join());
@@ -113,10 +113,22 @@ async function browserChecks() {
     await sleep(2500);
 
     check('page renders 41 drug cards', (await evaluate(`document.querySelectorAll('[id^="drug-"]').length`)) === 41);
-    check('every drug picture is N/A', await evaluate(`[...document.querySelectorAll('[id^="drug-"]')].every(c => c.querySelector('[data-picture-na]'))`));
-    check('version badge shows v1.1.0', (await evaluate(`(document.querySelector('[data-version-badge]')||{}).textContent`)) === 'v1.1.0');
+    check('31 drawn pictures, 10 N/A', (await evaluate(`[...document.querySelectorAll('[id^="drug-"]')].filter(c => c.querySelector('svg[data-picture]')).length`)) === 31 && (await evaluate(`document.querySelectorAll('[id^="drug-"] [data-picture-na]').length`)) === 10);
+    check('every drawn picture has a label source link', await evaluate('Object.values(DRUG_PICTURE).every(p => /^https:\\/\\/(dailymed|www\\.ema|medicines\\.ie|yourmedicines\\.ie|www\\.medicines\\.org\\.uk|pins\\.japic)/.test(p.src[1]))'));
+    check('version badge shows the newest changelog version', (await evaluate(`(document.querySelector('[data-version-badge]')||{}).textContent`)) === (await evaluate('APP_VERSION')));
+    check('7 guide buttons, each for phone and wide screens', (await evaluate(`document.querySelectorAll('[data-guide]').length`)) === 14);
+    check('References: collapsed at the bottom, opens to 13 numbered items', await evaluate(`(async () => {
+      const sec = document.querySelector('[data-references]');
+      if (!sec || document.querySelector('[data-refs-list]')) return false;
+      const last = [...document.querySelectorAll('#ht-list-page > *')].pop();
+      sec.querySelector('[data-refs-toggle]').click();
+      await new Promise(r => setTimeout(r, 200));
+      const n = document.querySelectorAll('[data-refs-list] ol > li').length;
+      sec.querySelector('[data-refs-toggle]').click();
+      return n === 13 && sec.compareDocumentPosition(document.querySelector('[data-drug-grid]')) & Node.DOCUMENT_POSITION_PRECEDING;
+    })()`));
     check('1st-line filter excludes ARNI', await evaluate(`(async () => {
-      const b = [...document.querySelectorAll('[data-quick-filters] button')][1]; b.click();
+      const b = document.querySelector('[data-clinical="firstLine"]'); b.click();
       await new Promise(r => setTimeout(r, 200));
       const hasArni = !!document.getElementById('drug-sacubitril_valsartan');
       b.click(); await new Promise(r => setTimeout(r, 200));
@@ -127,15 +139,16 @@ async function browserChecks() {
     const detail = await evaluate(`(async () => {
       document.querySelector('#drug-eplerenone [data-details]').click();
       await new Promise(r => setTimeout(r, 300));
-      const s = document.querySelector('[data-sources]');
+      if (document.querySelector('[data-src-toggle]').getAttribute('aria-pressed') !== 'true') document.querySelector('[data-src-toggle]').click();
+      await new Promise(r => setTimeout(r, 200));
+      const s = document.querySelector('[data-source]');
       const out = { sources: !!s, link: !!(s && s.querySelector('a[href*="dailymed"]')) };
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       await new Promise(r => setTimeout(r, 200));
-      out.closed = !document.querySelector('[data-sources]');
+      out.closed = !document.querySelector('[data-detail-modal]');
       return out;
     })()`);
-    check('detail view has a Sources block with a DailyMed link', detail.sources && detail.link);
+    check('detail view: Show sources gives a DailyMed label link', detail.sources && detail.link);
     check('Escape closes the detail view', detail.closed);
 
     // changelog
@@ -162,18 +175,22 @@ async function browserChecks() {
 
     // secondary screener: each box shows advice
     check('secondary-HT screener shows advice for "resistant" alone', await evaluate(`(async () => {
-      document.querySelector('[data-tab="tools"]').click();
+      document.querySelector('[data-guide="tools"]').click();
       await new Promise(r => setTimeout(r, 200));
       [...document.querySelectorAll('[data-tool-tabs] button')][2].click();
       await new Promise(r => setTimeout(r, 200));
       const label = [...document.querySelectorAll('label')].find(l => /Resistant HT|ดื้อยา/.test(l.textContent));
       label.querySelector('input').click();
       await new Promise(r => setTimeout(r, 200));
-      return /Primary Aldosteronism/.test(document.getElementById('main-app-container').textContent);
+      const ok = /Primary Aldosteronism/.test(document.getElementById('main-app-container').textContent);
+      document.querySelector('[data-guide-close]').click();
+      await new Promise(r => setTimeout(r, 200));
+      return ok && !document.querySelector('[data-guide-window]');
     })()`));
 
     // walk every tab, both languages, both widths
-    const TABS = ['drugs', 'starting', 'secondary', 'resistant', 'crises', 'comorbidities', 'tools', 'references'];
+    const TABS = ['drugs', 'starting', 'secondary', 'resistant', 'crises', 'comorbidities', 'tools'];
+    const SEL = (tab) => tab === 'drugs' ? '#ht-list-page' : '[data-guide-window] #main-app-container';
     for (const width of [1280, 375]) {
       await setWidth(width);
       for (const lang of ['th', 'en']) {
@@ -186,11 +203,13 @@ async function browserChecks() {
         })()`);
         for (const tab of TABS) {
           const r = await evaluate(`(async () => {
-            document.querySelector('[data-tab="${tab}"]').click();
+            const w = document.querySelector('[data-guide-close]'); if (w) w.click();
+            await new Promise(r => setTimeout(r, 150));
+            if ('${tab}' !== 'drugs') document.querySelector('[data-guide="${tab}"]').click();
             await new Promise(r => setTimeout(r, 250));
             window.dispatchEvent(new CustomEvent('htg-fold-all', { detail: true }));
             await new Promise(r => setTimeout(r, 250));
-            const main = document.getElementById('main-app-container');
+            const main = document.querySelector('${SEL(tab)}');
             const text = main.innerText;
             const thai = '${lang}' === 'en' ? (text.match(/[^\\n]*[\\u0E00-\\u0E7F][^\\n]*/g) || []).slice(0, 3) : [];
             return {

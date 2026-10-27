@@ -168,14 +168,14 @@ const PatientSheetModal = ({ lang, onClose }) => {
             <div className="mt-2 flex gap-2 print:hidden">
               <input
                 type="text"
-                placeholder={lang === 'th' ? 'เพิ่มชื่อยาและขนาด...' : 'Add medication name & dose...'}
+                placeholder={lang === 'th' ? 'ชื่อยาและขนาด' : 'Drug and dose'}
                 value={newMedName}
                 onChange={(e) => setNewMedName(e.target.value)}
                 className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
               />
               <input
                 type="text"
-                placeholder={lang === 'th' ? 'วิธีรับประทาน (เช่น 1 เม็ด เช้า)' : 'Timing (e.g. 1 tab morning)'}
+                placeholder={lang === 'th' ? 'วิธีกิน' : 'When to take'}
                 value={newMedTiming}
                 onChange={(e) => setNewMedTiming(e.target.value)}
                 className="w-44 px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
