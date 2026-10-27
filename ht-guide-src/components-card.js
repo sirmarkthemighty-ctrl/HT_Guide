@@ -219,6 +219,70 @@ const DrugCard = ({ drug, lang, isCompared, onToggleCompare, onSelectDetail, isB
   </div>
 );
 
+// --- Table view: one row per drug; the drug column stays pinned while the table scrolls sideways ---
+const DrugTable = ({ drugs, lang, comparedIds, onToggleCompare, onSelectDetail, bookmarkedIds, onToggleBookmark }) => {
+  const th = 'px-2.5 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800';
+  const td = 'px-2.5 py-2 align-top border-b border-slate-100 dark:border-slate-800';
+  const L = (a, b) => (lang === 'th' ? a : b);
+  return (
+    <div className="rounded-xl md:rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-x-auto relative" data-drug-table>
+      <table className="w-full min-w-[1000px] text-xs border-separate border-spacing-0">
+        <thead>
+          <tr>
+            <th className={th + ' sticky left-0 z-10 min-w-[150px]'}>{L('ยา', 'Drug')}</th>
+            <th className={th + ' min-w-[140px]'}>{L('กลุ่มยา', 'Class')}</th>
+            <th className={th}>{ui('kidney', lang)}</th>
+            <th className={th}>{ui('pregnancy', lang)}</th>
+            <th className={th}>{ui('potassium', lang)}</th>
+            <th className={th + ' min-w-[170px]'}>{ui('start', lang)}</th>
+            <th className={th + ' min-w-[170px]'}>{ui('maxDose', lang)}</th>
+            <th className={th}>{L('บัญชียา / แนวทางฯ', 'NLEM / CPG')}</th>
+            <th className={th}><span className="sr-only">{L('การทำงาน', 'Actions')}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {drugs.map((drug) => {
+            const sel = comparedIds.includes(drug.id);
+            const rowBg = sel ? 'bg-teal-50 dark:bg-teal-950' : 'bg-white dark:bg-slate-900';
+            return (
+              <tr key={drug.id} id={'drug-' + drug.id} onClick={(e) => openFromCard(e, drug, onSelectDetail)}
+                className={`cursor-pointer group ${sel ? '' : 'hover:[&>td]:bg-slate-50 dark:hover:[&>td]:bg-slate-800'}`} data-table-row>
+                <td className={`${td} ${rowBg} sticky left-0 z-[1] min-w-[150px] max-w-[190px] border-r border-slate-100 dark:border-slate-800`}>
+                  <div className="flex items-start gap-2 min-w-0">
+                    <DrugPicture drug={drug} className="w-8 h-8 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="block font-extrabold text-slate-800 dark:text-white leading-tight break-words">{drug.nameEn}</span>
+                      {lang === 'th' && <span className="block text-[10px] text-slate-500 dark:text-slate-400 break-words">{drug.nameTh}</span>}
+                      <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 break-words font-semibold">{drug.brandNames.join(', ')}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className={`${td} ${rowBg} min-w-[140px] max-w-[190px]`}><span className="inline-block leading-snug"><ClassChip drug={drug} lang={lang} /></span></td>
+                <td className={`${td} ${rowBg} font-bold min-w-[100px] ${KIDNEY_TONE(drug)}`}>{kidneyText(drug, lang)}</td>
+                <td className={`${td} ${rowBg} font-bold whitespace-nowrap ${PREG_TONE[drug.pregnancyRisk] || PREG_TONE.caution}`}>{pregText(drug, lang)}</td>
+                <td className={`${td} ${rowBg} font-bold whitespace-nowrap text-slate-700 dark:text-slate-200`}>{potassiumText(drug, lang)}</td>
+                <td className={`${td} ${rowBg} font-semibold text-slate-700 dark:text-slate-200 leading-snug min-w-[170px] max-w-[240px]`}>{lang === 'th' ? drug.startDoseTh : drug.startDose}</td>
+                <td className={`${td} ${rowBg} text-amber-800 dark:text-amber-300 font-semibold leading-snug min-w-[170px] max-w-[240px]`} data-max-dose>{lang === 'th' ? drug.maxDoseTh : drug.maxDose}</td>
+                <td className={`${td} ${rowBg}`}>
+                  <div className="flex flex-col items-start gap-1 [&>*]:whitespace-nowrap">
+                    <NlemChip drug={drug} lang={lang} />
+                    <GradeChip drug={drug} lang={lang} />
+                  </div>
+                </td>
+                <td className={`${td} ${rowBg}`}>
+                  <div className="flex flex-col gap-1 items-stretch [&_button]:whitespace-nowrap" data-card-actions>
+                    <SelectButtons drug={drug} lang={lang} isCompared={sel} onToggleCompare={onToggleCompare} onSelectDetail={onSelectDetail} isBookmarked={bookmarkedIds.includes(drug.id)} onToggleBookmark={onToggleBookmark} />
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 // --- List row ---
 const DrugListRow = ({ drug, lang, isCompared, onToggleCompare, onSelectDetail, isBookmarked, onToggleBookmark }) => (
   <div id={'drug-' + drug.id} onClick={(e) => openFromCard(e, drug, onSelectDetail)}

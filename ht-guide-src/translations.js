@@ -36,7 +36,8 @@ const translations = {
     themeDark: 'โหมดมืด',
     language: 'ภาษา',
     viewCard: 'มุมมองการ์ด',
-    viewList: 'มุมมองตาราง',
+    viewList: 'มุมมองรายการ',
+    viewTable: 'มุมมองตาราง',
     
     // Tabs
     tabDrugs: 'ยาลดความดันโลหิต',
@@ -158,7 +159,8 @@ const translations = {
     themeDark: 'Dark Mode',
     language: 'Language',
     viewCard: 'Card View',
-    viewList: 'Table View',
+    viewList: 'List View',
+    viewTable: 'Table View',
     
     // Tabs
     tabDrugs: 'Drug Directory',

@@ -22,7 +22,7 @@ It is decision support for healthcare professionals, not a substitute for the gu
   comorbidities and special populations, patient sheet. References are a collapsible list at the bottom of the page.
 - Seven tools: BP classifier, starting-drug wizard, secondary-HT screener, resistant-HT navigator, crisis triage,
   CV risk and statin, and a kidney (eGFR) drug check.
-- Search, sort, filters with removable chips, card and list views, bookmarks, side-by-side comparison of up to 4 drugs,
+- Search, sort, filters with removable chips, card, list and table views, bookmarks, side-by-side comparison of up to 4 drugs,
   colour-coded folding blocks in the guides and the drug details, light and dark themes.
 
 Tap the version badge next to the title for the changelog. Text that is not in the Thai guideline is marked

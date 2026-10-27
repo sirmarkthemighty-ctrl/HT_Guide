@@ -245,6 +245,10 @@ const App = () => {
                 className={`h-full px-2 md:px-2.5 rounded-md transition-colors flex items-center justify-center ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>
                 <ListIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
+              <button onClick={() => setViewMode('table')} aria-label={t.viewTable} title={t.viewTable} aria-pressed={viewMode === 'table'} data-view-table
+                className={`h-full px-2 md:px-2.5 rounded-md transition-colors flex items-center justify-center ${viewMode === 'table' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>
+                <TableIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              </button>
             </div>
 
             <button onClick={() => setFiltersOpen((v) => !v)} aria-expanded={filtersOpen} aria-controls="filter-bar" aria-label={t.filters} title={t.filters} data-filters-toggle
@@ -343,6 +347,9 @@ const App = () => {
             <p className="text-base md:text-lg font-medium">{L('ไม่พบรายการยาที่ตรงกับเงื่อนไข', 'No medicines match these filters')}</p>
             <button onClick={resetFilters} className="mt-2 text-teal-700 dark:text-teal-300 hover:underline text-sm md:text-base">{t.clearAllFilters}</button>
           </div>
+        ) : viewMode === 'table' ? (
+          <DrugTable drugs={filteredDrugs} lang={lang} comparedIds={comparedIds} onToggleCompare={toggleCompare} onSelectDetail={setDetailDrug}
+            bookmarkedIds={bookmarkedIds} onToggleBookmark={toggleBookmark} />
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5' : 'flex flex-col gap-2 md:gap-3'} data-drug-grid>
             {filteredDrugs.map((drug) => {

@@ -115,6 +115,17 @@ async function browserChecks() {
     check('page renders 41 drug cards', (await evaluate(`document.querySelectorAll('[id^="drug-"]').length`)) === 41);
     check('31 drawn pictures, 10 N/A', (await evaluate(`[...document.querySelectorAll('[id^="drug-"]')].filter(c => c.querySelector('svg[data-picture]')).length`)) === 31 && (await evaluate(`document.querySelectorAll('[id^="drug-"] [data-picture-na]').length`)) === 10);
     check('every drawn picture has a label source link', await evaluate('Object.values(DRUG_PICTURE).every(p => /^https:\\/\\/(dailymed|www\\.ema|medicines\\.ie|yourmedicines\\.ie|www\\.medicines\\.org\\.uk|pins\\.japic)/.test(p.src[1]))'));
+    check('table view: 41 rows, drug column pinned, a row opens the details, back to cards', await evaluate(`(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('[data-view-table]').click(); await wait(300);
+      const rows = document.querySelectorAll('[data-table-row]');
+      const pinned = rows.length && getComputedStyle(rows[0].cells[0]).position === 'sticky';
+      rows[0].cells[2].click(); await wait(300);
+      const opened = !!document.querySelector('[data-detail-modal], [role="dialog"]');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await wait(200);
+      document.querySelector('[aria-pressed][aria-label="' + translations.th.viewCard + '"], [aria-label="' + translations.en.viewCard + '"]').click(); await wait(300);
+      return rows.length === 41 && pinned && opened && !document.querySelector('[data-drug-table]');
+    })()`));
     check('version badge shows the newest changelog version', (await evaluate(`(document.querySelector('[data-version-badge]')||{}).textContent`)) === (await evaluate('APP_VERSION')));
     check('7 guide buttons, each for phone and wide screens', (await evaluate(`document.querySelectorAll('[data-guide]').length`)) === 14);
     check('References: collapsed at the bottom, opens to 13 numbered items', await evaluate(`(async () => {

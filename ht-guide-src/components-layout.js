@@ -3,7 +3,7 @@
 // Newest first. The header badge reads changelogData[0].version. One entry per day.
 const changelogData = [
   {
-    version: 'v1.3.1',
+    version: 'v1.4.0',
     date: 'October 27, 2026',
     titleEn: 'Bronchodilator Guide layout; checked against the Thai CPG 2567 and NLEM 2569',
     titleTh: 'หน้าตาแบบคู่มือยาพ่นขยายหลอดลม; ตรวจทานกับแนวทางฯ 2567 และบัญชียาหลักแห่งชาติ 2569',
@@ -17,6 +17,7 @@ const changelogData = [
       'References: a collapsible, numbered list at the bottom of the page; each item says what it was used for, with the guideline grade key.',
       'Sun/moon theme button follows the device until you tap it. Changelog in this window.',
       'Drug pictures for 31 medicines, drawn from the colour, shape and score written in the label of the same maker\'s brand sold in Thailand (US label; EU product information; Irish or UK SmPC or leaflet; Japanese package insert); the detail view names the brand and links the label. Tablets are drawn with their edge, score groove and the imprint code the label gives. The other 10 show N/A.',
+      'Table view (third view button): one row per drug with class, kidney, pregnancy, potassium, starting and maximum dose, NLEM and CPG grade. The drug column stays pinned while the table scrolls sideways; tap a row for details.',
     ],
     bugs: [
       'NLEM tags corrected to NLEM 2569 (b / s / ex); ramipril, valsartan, telmisartan, bisoprolol, indapamide, chlorthalidone, sacubitril/valsartan, empagliflozin and the SPCs are not on the list.',
