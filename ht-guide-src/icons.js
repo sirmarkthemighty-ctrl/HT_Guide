@@ -141,21 +141,21 @@ const CalculatorIcon = ({ className = "w-4 h-4" }) => (
 const dmLabel = (setid) => 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=' + setid;
 const emaPi = (name) => `https://www.ema.europa.eu/en/documents/product-information/${name}-epar-product-information_en.pdf`;
 const DRUG_PICTURE = {
-  losartan: { brand: 'Cozaar 50 mg', fill: '#f8fafc', shape: 'oval', score: true, en: 'white, oval, film-coated, code 952, scored', th: 'สีขาว รูปไข่ เคลือบฟิล์ม รหัส 952 มีรอยแบ่ง', src: ['US label: Cozaar', dmLabel('9949448f-c3b9-44ee-94ed-c1aca8c90f39')] },
-  valsartan: { brand: 'Diovan 80 mg', fill: '#e9a3a3', shape: 'oval', en: 'pale red, almond-shaped, NVR / DV (a round pale red 80 mg is also listed)', th: 'สีแดงอ่อน รูปเมล็ดอัลมอนด์ NVR / DV (มีชนิดกลมสีแดงอ่อนด้วย)', src: ['US label: Diovan', dmLabel('5ddba454-f3e6-43c2-a7a6-58365d297213')] },
-  telmisartan: { brand: 'Micardis 40 mg', fill: '#f8fafc', shape: 'capsule', en: 'white, oblong, engraved 51H and the company logo (80 mg: 52H)', th: 'สีขาว รูปยาว สลัก 51H และโลโก้บริษัท (80 มก.: 52H)', src: ['EU product information: Micardis', emaPi('micardis')] },
-  sacubitril_valsartan: { brand: 'Entresto 100 mg (49/51 mg)', fill: '#f5e6a3', shape: 'oval', en: 'pale yellow, ovaloid, film-coated, NVR / L1 (50 mg violet-white, 200 mg light pink)', th: 'สีเหลืองอ่อน รูปไข่ เคลือบฟิล์ม NVR / L1 (50 มก. สีขาวอมม่วง, 200 มก. สีชมพูอ่อน)', src: ['US label: Entresto', dmLabel('000dc81d-ab91-450c-8eae-8eb74e72296f')] },
-  amlodipine: { brand: 'Norvasc 5 mg', fill: '#f8fafc', shape: 'octagon', en: 'white, elongated octagon, engraved NORVASC 5 (10 mg: white, round)', th: 'สีขาว แปดเหลี่ยมยาว สลัก NORVASC 5 (10 มก.: สีขาว กลม)', src: ['US label: Norvasc', dmLabel('abd6a2ca-40c2-485c-bc53-db1c652505ed')] },
-  spironolactone: { brand: 'Aldactone 25 mg', fill: '#f6eba6', shape: 'round', en: 'light yellow, round, film-coated, SEARLE 1001 (100 mg: peach, round, scored)', th: 'สีเหลืองอ่อน กลม เคลือบฟิล์ม SEARLE 1001 (100 มก.: สีพีช กลม มีรอยแบ่ง)', src: ['US label: Aldactone', dmLabel('0fed2822-3a03-4b64-9857-c682fcd462bc')] },
-  eplerenone: { brand: 'Inspra 25 / 50 mg', fill: '#f0c84a', shape: 'diamond', en: 'yellow, diamond, film-coated, VLE / NSR 25 or 50', th: 'สีเหลือง รูปข้าวหลามตัด เคลือบฟิล์ม VLE / NSR 25 หรือ 50', src: ['US label: Inspra', dmLabel('1a52bedc-8e2c-4116-a296-a87770676b4a')] },
-  spc_amlodipine_valsartan: { brand: 'Exforge 5/160 mg', fill: '#d9a520', shape: 'oval', en: 'dark yellow, ovaloid, film-coated, NVR / ECE (10/160 mg: light yellow)', th: 'สีเหลืองเข้ม รูปไข่ เคลือบฟิล์ม NVR / ECE (10/160 มก.: สีเหลืองอ่อน)', src: ['US label: Exforge', dmLabel('d0caec89-96ec-411d-a933-63eda74a6da7')] },
-  spc_telmisartan_amlodipine: { brand: 'Twynsta 40/5 mg', fill: '#f8fafc', fill2: '#6fa8dc', shape: 'twolayer', en: 'blue and white two-layer oval tablet, A1 and the company logo on the white layer', th: 'ยาเม็ดรูปไข่สองชั้น สีฟ้าและขาว สลัก A1 และโลโก้บริษัทบนชั้นสีขาว', src: ['EU product information: Twynsta', emaPi('twynsta')] },
-  spc_losartan_hctz: { brand: 'Hyzaar 50/12.5 mg', fill: '#f0d060', shape: 'oval', en: 'yellow, oval, film-coated, code 717 (100/25 mg: yellow, 747)', th: 'สีเหลือง รูปไข่ เคลือบฟิล์ม รหัส 717 (100/25 มก.: สีเหลือง รหัส 747)', src: ['US label: Hyzaar', dmLabel('4116ccde-2e23-45f4-b12f-6337df877744')] },
-  spc_triple_amlodipine_valsartan_hctz: { brand: 'Exforge HCT 5/160/12.5 mg', fill: '#f8fafc', shape: 'oval', en: 'white, ovaloid, film-coated, NVR / VCL (10/160/12.5 pale yellow, 10/160/25 brown-yellow)', th: 'สีขาว รูปไข่ เคลือบฟิล์ม NVR / VCL (10/160/12.5 สีเหลืองอ่อน, 10/160/25 สีเหลืองน้ำตาล)', src: ['US label: Exforge HCT', dmLabel('18d7820d-471f-4ee2-9ec6-25d8d27c77de')] },
+  losartan: { brand: 'Cozaar 50 mg', imprint: '952', fill: '#f8fafc', shape: 'oval', score: true, en: 'white, oval, film-coated, code 952, scored', th: 'สีขาว รูปไข่ เคลือบฟิล์ม รหัส 952 มีรอยแบ่ง', src: ['US label: Cozaar', dmLabel('9949448f-c3b9-44ee-94ed-c1aca8c90f39')] },
+  valsartan: { brand: 'Diovan 80 mg', imprint: 'DV', fill: '#e9a3a3', shape: 'oval', en: 'pale red, almond-shaped, NVR / DV (a round pale red 80 mg is also listed)', th: 'สีแดงอ่อน รูปเมล็ดอัลมอนด์ NVR / DV (มีชนิดกลมสีแดงอ่อนด้วย)', src: ['US label: Diovan', dmLabel('5ddba454-f3e6-43c2-a7a6-58365d297213')] },
+  telmisartan: { brand: 'Micardis 40 mg', imprint: '51H', fill: '#f8fafc', shape: 'capsule', en: 'white, oblong, engraved 51H and the company logo (80 mg: 52H)', th: 'สีขาว รูปยาว สลัก 51H และโลโก้บริษัท (80 มก.: 52H)', src: ['EU product information: Micardis', emaPi('micardis')] },
+  sacubitril_valsartan: { brand: 'Entresto 100 mg (49/51 mg)', imprint: 'L1', fill: '#f5e6a3', shape: 'oval', en: 'pale yellow, ovaloid, film-coated, NVR / L1 (50 mg violet-white, 200 mg light pink)', th: 'สีเหลืองอ่อน รูปไข่ เคลือบฟิล์ม NVR / L1 (50 มก. สีขาวอมม่วง, 200 มก. สีชมพูอ่อน)', src: ['US label: Entresto', dmLabel('000dc81d-ab91-450c-8eae-8eb74e72296f')] },
+  amlodipine: { brand: 'Norvasc 5 mg', imprint: 'NORVASC', fill: '#f8fafc', shape: 'octagon', en: 'white, elongated octagon, engraved NORVASC 5 (10 mg: white, round)', th: 'สีขาว แปดเหลี่ยมยาว สลัก NORVASC 5 (10 มก.: สีขาว กลม)', src: ['US label: Norvasc', dmLabel('abd6a2ca-40c2-485c-bc53-db1c652505ed')] },
+  spironolactone: { brand: 'Aldactone 25 mg', imprint: '1001', fill: '#f6eba6', shape: 'round', en: 'light yellow, round, film-coated, SEARLE 1001 (100 mg: peach, round, scored)', th: 'สีเหลืองอ่อน กลม เคลือบฟิล์ม SEARLE 1001 (100 มก.: สีพีช กลม มีรอยแบ่ง)', src: ['US label: Aldactone', dmLabel('0fed2822-3a03-4b64-9857-c682fcd462bc')] },
+  eplerenone: { brand: 'Inspra 25 / 50 mg', imprint: 'NSR', fill: '#f0c84a', shape: 'diamond', en: 'yellow, diamond, film-coated, VLE / NSR 25 or 50', th: 'สีเหลือง รูปข้าวหลามตัด เคลือบฟิล์ม VLE / NSR 25 หรือ 50', src: ['US label: Inspra', dmLabel('1a52bedc-8e2c-4116-a296-a87770676b4a')] },
+  spc_amlodipine_valsartan: { brand: 'Exforge 5/160 mg', imprint: 'ECE', fill: '#d9a520', shape: 'oval', en: 'dark yellow, ovaloid, film-coated, NVR / ECE (10/160 mg: light yellow)', th: 'สีเหลืองเข้ม รูปไข่ เคลือบฟิล์ม NVR / ECE (10/160 มก.: สีเหลืองอ่อน)', src: ['US label: Exforge', dmLabel('d0caec89-96ec-411d-a933-63eda74a6da7')] },
+  spc_telmisartan_amlodipine: { brand: 'Twynsta 40/5 mg', imprint: 'A1', fill: '#f8fafc', fill2: '#6fa8dc', shape: 'twolayer', en: 'blue and white two-layer oval tablet, A1 and the company logo on the white layer', th: 'ยาเม็ดรูปไข่สองชั้น สีฟ้าและขาว สลัก A1 และโลโก้บริษัทบนชั้นสีขาว', src: ['EU product information: Twynsta', emaPi('twynsta')] },
+  spc_losartan_hctz: { brand: 'Hyzaar 50/12.5 mg', imprint: '717', fill: '#f0d060', shape: 'oval', en: 'yellow, oval, film-coated, code 717 (100/25 mg: yellow, 747)', th: 'สีเหลือง รูปไข่ เคลือบฟิล์ม รหัส 717 (100/25 มก.: สีเหลือง รหัส 747)', src: ['US label: Hyzaar', dmLabel('4116ccde-2e23-45f4-b12f-6337df877744')] },
+  spc_triple_amlodipine_valsartan_hctz: { brand: 'Exforge HCT 5/160/12.5 mg', imprint: 'VCL', fill: '#f8fafc', shape: 'oval', en: 'white, ovaloid, film-coated, NVR / VCL (10/160/12.5 pale yellow, 10/160/25 brown-yellow)', th: 'สีขาว รูปไข่ เคลือบฟิล์ม NVR / VCL (10/160/12.5 สีเหลืองอ่อน, 10/160/25 สีเหลืองน้ำตาล)', src: ['US label: Exforge HCT', dmLabel('18d7820d-471f-4ee2-9ec6-25d8d27c77de')] },
   doxazosin: { brand: 'Cardura 2 mg', fill: '#f8fafc', shape: 'capsule', score: true, en: 'white, oblong, scored, CN 2 / VLE (4 mg: white, rhombus, scored)', th: 'สีขาว รูปยาว มีรอยแบ่ง CN 2 / VLE (4 มก.: สีขาว รูปขนมเปียกปูน มีรอยแบ่ง)', src: ['US label: Cardura', dmLabel('5e1f5e49-2da1-43ab-9795-228a8bcc5a82')] },
-  empagliflozin: { brand: 'Jardiance 10 mg', fill: '#f5e6a3', shape: 'round', en: 'pale yellow, round, film-coated, S 10 (25 mg: pale yellow, oval)', th: 'สีเหลืองอ่อน กลม เคลือบฟิล์ม S 10 (25 มก.: สีเหลืองอ่อน รูปไข่)', src: ['US label: Jardiance', dmLabel('faf3dd6a-9cd0-39c2-0d2e-232cb3f67565')] },
+  empagliflozin: { brand: 'Jardiance 10 mg', imprint: 'S10', fill: '#f5e6a3', shape: 'round', en: 'pale yellow, round, film-coated, S 10 (25 mg: pale yellow, oval)', th: 'สีเหลืองอ่อน กลม เคลือบฟิล์ม S 10 (25 มก.: สีเหลืองอ่อน รูปไข่)', src: ['US label: Jardiance', dmLabel('faf3dd6a-9cd0-39c2-0d2e-232cb3f67565')] },
   semaglutide: { brand: 'Rybelsus 3 / 7 / 14 mg', fill: '#faf3d6', shape: 'oval', en: 'white to light yellow, oval (the Ozempic and Wegovy pens: no colour stated)', th: 'สีขาวถึงเหลืองอ่อน รูปไข่ (ปากกา Ozempic และ Wegovy: ไม่ระบุสี)', src: ['US label: Rybelsus', dmLabel('27f15fac-7d98-4114-a2ec-92494a91da98')] },
-  finerenone: { brand: 'Kerendia 10 mg', fill: '#f4a7b9', shape: 'capsule', en: 'pink, oblong, FI / 10 (20 mg: yellow)', th: 'สีชมพู รูปยาว FI / 10 (20 มก.: สีเหลือง)', src: ['US label: Kerendia', dmLabel('fc726765-5d5a-4d6e-b037-b847bda9fb7c')] },
+  finerenone: { brand: 'Kerendia 10 mg', imprint: 'FI', fill: '#f4a7b9', shape: 'capsule', en: 'pink, oblong, FI / 10 (20 mg: yellow)', th: 'สีชมพู รูปยาว FI / 10 (20 มก.: สีเหลือง)', src: ['US label: Kerendia', dmLabel('fc726765-5d5a-4d6e-b037-b847bda9fb7c')] },
   furosemide: { brand: 'Lasix 40 mg', fill: '#f8fafc', shape: 'round', score: true, en: 'white, round, monogrammed, scored', th: 'สีขาว กลม มีตราสลัก มีรอยแบ่ง', src: ['US label: Lasix', dmLabel('2c9b4d8f-0770-482d-a9e6-9c616a440b1a')] },
   // Vials: the label describes the solution only; the vial and cap are drawn as outlines
   labetalol_iv: { brand: 'Labetalol injection (Hospira) 100 mg / 20 mL vial', liquid: '#fbf3c8', shape: 'vial', en: 'vial of clear, colourless to light yellow solution (cap colour not stated)', th: 'ขวดยาบรรจุสารละลายใส ไม่มีสีถึงเหลืองอ่อน (ไม่ระบุสีฝา)', src: ['US label: labetalol injection, Hospira', dmLabel('abfc6b75-1ed5-41f1-0484-4597488237bc')] },
@@ -169,14 +169,44 @@ const DRUG_PICTURE = {
   nebivolol: { brand: 'Nebilet 5 mg', fill: '#f8fafc', shape: 'round', cross: true, en: 'white, round, cross-scored', th: 'สีขาว กลม มีรอยแบ่งรูปกากบาท', src: ['Irish SmPC: Nebilet 5 mg', 'https://medicines.ie/medicines/nebilet-5-mg-tablets~A0002169/spc'] },
   spc_perindopril_indapamide: { brand: 'Coversyl Arginine Plus 5/1.25 mg (Servier; Bi-Preterax)', fill: '#f8fafc', shape: 'capsule', en: 'white, rod-shaped, film-coated', th: 'สีขาว รูปแท่ง เคลือบฟิล์ม', src: ['Irish SmPC: Coversyl Arginine Plus 5 mg/1.25 mg', 'https://medicines.ie/medicines/coversyl-arginine-plus-5mg-1-25mg-film-coated-tablets~A0000210/spc'] },
   verapamil_sr: { brand: 'Isoptin SR 240 mg', fill: '#b7dfb0', shape: 'capsule', score: true, en: 'light green, oblong, film-coated, breakline on both sides, Knoll logo on one side', th: 'สีเขียวอ่อน รูปยาว เคลือบฟิล์ม มีรอยแบ่งทั้งสองด้าน มีโลโก้ Knoll ด้านหนึ่ง', src: ['Irish SmPC: Isoptin SR 240 mg', 'https://medicines.ie/medicines/isoptin-sr-240-mg-prolonged-release-tablets~A0000826/spc'] },
-  nifedipine_cr: { brand: 'Adalat LA 30 mg (Bayer; UK name of Adalat GITS)', fill: '#f3b3c2', shape: 'round', en: 'pink, round, with a laser hole on one side, marked Adalat 30', th: 'สีชมพู กลม มีรูเลเซอร์ด้านหนึ่ง พิมพ์ Adalat 30', src: ['UK SmPC: Adalat LA 30 mg', 'https://www.medicines.org.uk/emc/product/6180/smpc'] },
-  spc_olmesartan_amlodipine_hctz: { brand: 'Sevikar HCT 20/5/12.5 mg', fill: '#f5b47a', shape: 'round', en: 'light orange, round, film-coated, debossed C51 (40/10/25 mg: greyish red, oval)', th: 'สีส้มอ่อน กลม เคลือบฟิล์ม สลัก C51 (40/10/25 มก.: สีแดงอมเทา รูปไข่)', src: ['UK SmPC: Sevikar HCT', 'https://www.medicines.org.uk/emc/product/4596/smpc'] },
-  diltiazem_sr: { brand: 'Herbesser R 200 mg capsule', fill: '#d9534f', fill2: '#f8fafc', shape: 'capsule2', en: 'red / white hard capsule, code TA304 (R 100 mg: white / white; 30 and 60 mg tablets: white, round)', th: 'แคปซูลแข็งสีแดง / ขาว รหัส TA304 (R 100 มก.: สีขาว / ขาว; ชนิดเม็ด 30 และ 60 มก.: สีขาว กลม)', src: ['Japanese package insert: Herbesser R', 'https://pins.japic.or.jp/pdf/newPINS/00051504.pdf'] },
+  nifedipine_cr: { brand: 'Adalat LA 30 mg (Bayer; UK name of Adalat GITS)', imprint: 'Adalat 30', fill: '#f3b3c2', shape: 'round', en: 'pink, round, with a laser hole on one side, marked Adalat 30', th: 'สีชมพู กลม มีรูเลเซอร์ด้านหนึ่ง พิมพ์ Adalat 30', src: ['UK SmPC: Adalat LA 30 mg', 'https://www.medicines.org.uk/emc/product/6180/smpc'] },
+  spc_olmesartan_amlodipine_hctz: { brand: 'Sevikar HCT 20/5/12.5 mg', imprint: 'C51', fill: '#f5b47a', shape: 'round', en: 'light orange, round, film-coated, debossed C51 (40/10/25 mg: greyish red, oval)', th: 'สีส้มอ่อน กลม เคลือบฟิล์ม สลัก C51 (40/10/25 มก.: สีแดงอมเทา รูปไข่)', src: ['UK SmPC: Sevikar HCT', 'https://www.medicines.org.uk/emc/product/4596/smpc'] },
+  diltiazem_sr: { brand: 'Herbesser R 200 mg capsule', imprint: 'TA304', fill: '#d9534f', fill2: '#f8fafc', shape: 'capsule2', en: 'red / white hard capsule, code TA304 (R 100 mg: white / white; 30 and 60 mg tablets: white, round)', th: 'แคปซูลแข็งสีแดง / ขาว รหัส TA304 (R 100 มก.: สีขาว / ขาว; ชนิดเม็ด 30 และ 60 มก.: สีขาว กลม)', src: ['Japanese package insert: Herbesser R', 'https://pins.japic.or.jp/pdf/newPINS/00051504.pdf'] },
   clonidine: { brand: 'Catapres 150 µg', fill: '#f8fafc', shape: 'round', score: true, en: 'white, round, uncoated, scored, code 15C', th: 'สีขาว กลม ไม่เคลือบ มีรอยแบ่ง รหัส 15C', src: ['Japanese package insert: Catapres', 'https://pins.japic.or.jp/pdf/newPINS/00052534.pdf'] },
-  hydralazine: { brand: 'Apresoline 25 mg', fill: '#f8fafc', shape: 'round', en: 'white, round, sugar-coated, code SJ 103', th: 'สีขาว กลม เคลือบน้ำตาล รหัส SJ 103', src: ['Japanese package insert: Apresoline', 'https://pins.japic.or.jp/pdf/newPINS/00071748.pdf'] },
+  hydralazine: { brand: 'Apresoline 25 mg', imprint: 'SJ 103', fill: '#f8fafc', shape: 'round', en: 'white, round, sugar-coated, code SJ 103', th: 'สีขาว กลม เคลือบน้ำตาล รหัส SJ 103', src: ['Japanese package insert: Apresoline', 'https://pins.japic.or.jp/pdf/newPINS/00071748.pdf'] },
 };
 
-// Tablet or vial drawn from its description, or an "N/A" box when there is no reference
+// Tablet or vial drawn from its description, or an "N/A" box when there is no reference.
+// Tablets get a darker edge (thickness), a soft shadow, a highlight, an engraved score and the label's imprint code.
+const shadeHex = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+const TABLET_SHAPES = {
+  round: <circle cx="32" cy="32" r="19" />,
+  oval: <ellipse cx="32" cy="32" rx="24" ry="14" />,
+  capsule: <rect x="7" y="21" width="50" height="22" rx="11" />,
+  diamond: <path d="M32 10 54 32 32 54 10 32Z" strokeLinejoin="round" />,
+  octagon: <path d="M17 19h30l9 8v10l-9 8H17l-9-8V27Z" strokeLinejoin="round" />,
+  triangle: <path d="M32 11c2 0 3.3 1 4.4 2.9l15.4 26.6c1.1 1.9 1.1 3.7 0 5.3-1 1.5-2.6 2.2-4.6 2.2H16.8c-2 0-3.6-.7-4.6-2.2-1.1-1.6-1.1-3.4 0-5.3l15.4-26.6C28.7 12 30 11 32 11Z" />,
+  heart: <path d="M32 52C20 43 10 35 10 24c0-6.5 5-11 11-11 4.6 0 8.5 2.6 11 6.5C34.5 15.6 38.4 13 43 13c6 0 11 4.5 11 11 0 11-10 19-22 28Z" strokeLinejoin="round" />,
+};
+// score line ends per shape [y1, y2]
+const SCORE_Y = { round: [14, 50], triangle: [24, 47], heart: [20, 50], capsule: [21, 43], oval: [18, 46], diamond: [10, 54], octagon: [19, 45] };
+const Imprint = ({ text, x = 32, y = 34, fill, size }) => {
+  const words = text.length > 6 && text.includes(' ') ? text.split(' ') : [text];
+  const fs = size || (text.length > 6 ? 6.5 : 8);
+  return (
+    <g fontFamily="Arial, sans-serif" fontWeight="700" fontSize={fs} textAnchor="middle" letterSpacing="0.3">
+      {words.map((w, i) => {
+        const yy = y + (i - (words.length - 1) / 2) * (fs + 1);
+        return (
+          <g key={i}>
+            <text x={x} y={yy + 0.6} fill="#ffffff" opacity="0.55">{w}</text>
+            <text x={x} y={yy} fill={fill} opacity="0.75">{w}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
 const DrugPicture = ({ drug, className = 'w-12 h-12' }) => {
   const p = drug && DRUG_PICTURE[drug.id];
   if (!p) {
@@ -187,56 +217,64 @@ const DrugPicture = ({ drug, className = 'w-12 h-12' }) => {
       </svg>
     );
   }
-  const stroke = '#64748b';
+  const label = p.brand + ': ' + p.en;
   if (p.shape === 'vial') {
+    const body = 'M26 13h12v5c0 1 4 2 4 5v31c0 2-1.5 3.5-3.5 3.5h-13C23.5 57.5 22 56 22 54V23c0-3 4-4 4-5Z';
     return (
-      <svg viewBox="0 0 64 64" className={className} role="img" aria-label={p.brand + ': ' + p.en} data-picture="vial">
-        <g fill="none" stroke={stroke} strokeWidth="1.6" strokeLinejoin="round">
-          <rect x="24" y="6" width="16" height="7" rx="1.5" />
-          <path d="M26 13h12v5c0 1 4 2 4 5v31c0 2-1.5 3.5-3.5 3.5h-13C23.5 57.5 22 56 22 54V23c0-3 4-4 4-5Z" />
-        </g>
+      <svg viewBox="0 0 64 64" className={className} role="img" aria-label={label} data-picture="vial">
+        <ellipse cx="33" cy="58.5" rx="12" ry="2.2" fill="#0f172a" opacity="0.18" />
+        <path d={body} fill="#e2e8f0" opacity="0.35" />
         <path d="M23 32h18v22c0 1.4-1.1 2.5-2.5 2.5h-13C24.1 56.5 23 55.4 23 54Z" fill={p.liquid} />
-        <path d="M22 32h20" stroke={stroke} strokeWidth="1" />
+        <path d="M23 32h18" stroke={shadeHex(p.liquid, 0.8)} strokeWidth="1.2" />
+        <path d={body} fill="none" stroke="#64748b" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M25.5 25v28" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" opacity="0.7" />
+        <rect x="24" y="6" width="16" height="7" rx="1.5" fill="#cbd5e1" stroke="#64748b" strokeWidth="1.6" />
+        <path d="M26 8.5h12" stroke="#ffffff" strokeWidth="1.2" opacity="0.8" />
       </svg>
     );
   }
   if (p.shape === 'capsule2') {
+    const capH = shadeHex(p.fill, 0.72), bodyH = shadeHex(p.fill2, 0.8);
     return (
-      <svg viewBox="0 0 64 64" className={className} role="img" aria-label={p.brand + ': ' + p.en} data-picture="capsule2">
-        <g stroke={stroke} strokeWidth="1.6" strokeLinejoin="round">
-          <path d="M33 20H20a12 12 0 0 0 0 24h13Z" fill={p.fill} />
-          <path d="M31 20h13a12 12 0 0 1 0 24H31Z" fill={p.fill2} />
-        </g>
+      <svg viewBox="0 0 64 64" className={className} role="img" aria-label={label} data-picture="capsule2">
+        <rect x="8" y="24" width="50" height="24" rx="12" fill="#0f172a" opacity="0.16" />
+        <path d="M31 21h13a11 11 0 0 1 0 22H31Z" fill={p.fill2} stroke={bodyH} strokeWidth="1.4" />
+        <path d="M34 20H19a12 12 0 0 0 0 24h15Z" fill={p.fill} stroke={capH} strokeWidth="1.4" />
+        <path d="M34 20v24" stroke={capH} strokeWidth="1.4" />
+        <path d="M14 26.5h40" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.45" />
+        <path d="M12 38.5h40" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" opacity="0.08" />
+        {p.imprint && <Imprint text={p.imprint} x={44} y={34.3} fill="#1f2937" size={5.5} />}
       </svg>
     );
   }
-  if (p.shape === 'twolayer') {
-    return (
-      <svg viewBox="0 0 64 64" className={className} role="img" aria-label={p.brand + ': ' + p.en} data-picture="twolayer">
-        <clipPath id={'tl-' + drug.id}><ellipse cx="32" cy="32" rx="24" ry="14" /></clipPath>
-        <g clipPath={`url(#tl-${drug.id})`}>
-          <rect x="0" y="0" width="64" height="32" fill={p.fill} />
-          <rect x="0" y="32" width="64" height="32" fill={p.fill2} />
-        </g>
-        <ellipse cx="32" cy="32" rx="24" ry="14" fill="none" stroke={stroke} strokeWidth="1.6" />
-        <line x1="8" y1="32" x2="56" y2="32" stroke={stroke} strokeWidth="1" />
-      </svg>
-    );
-  }
-  const shape = {
-    round: <circle cx="32" cy="32" r="19" />,
-    oval: <ellipse cx="32" cy="32" rx="23" ry="14" />,
-    capsule: <rect x="8" y="20" width="48" height="24" rx="12" />,
-    diamond: <path d="M32 9 55 32 32 55 9 32Z" strokeLinejoin="round" />,
-    octagon: <path d="M17 18h30l8 8v12l-8 8H17l-8-8V26Z" strokeLinejoin="round" />,
-    triangle: <path d="M32 11c2 0 3.3 1 4.4 2.9l15.4 26.6c1.1 1.9 1.1 3.7 0 5.3-1 1.5-2.6 2.2-4.6 2.2H16.8c-2 0-3.6-.7-4.6-2.2-1.1-1.6-1.1-3.4 0-5.3l15.4-26.6C28.7 12 30 11 32 11Z" />,
-    heart: <path d="M32 52C20 43 10 35 10 24c0-6.5 5-11 11-11 4.6 0 8.5 2.6 11 6.5C34.5 15.6 38.4 13 43 13c6 0 11 4.5 11 11 0 11-10 19-22 28Z" strokeLinejoin="round" />,
-  }[p.shape];
+  const twoLayer = p.shape === 'twolayer';
+  const shape = TABLET_SHAPES[twoLayer ? 'oval' : p.shape];
+  const top = p.fill;
+  const edge = twoLayer ? p.fill2 : shadeHex(p.fill, 0.8);
+  const line = shadeHex(twoLayer ? p.fill2 : p.fill, 0.55);
+  const thick = twoLayer ? 4 : 2.6;
+  const sc = SCORE_Y[twoLayer ? 'oval' : p.shape] || [20, 44];
   return (
-    <svg viewBox="0 0 64 64" className={className} role="img" aria-label={p.brand + ': ' + p.en} data-picture={p.shape}>
-      <g fill={p.fill} stroke={stroke} strokeWidth="1.6">{shape}</g>
-      {p.score && <line x1="32" y1={{ round: 15, triangle: 24, heart: 20 }[p.shape] || 20} x2="32" y2={{ round: 49, triangle: 46, heart: 50 }[p.shape] || 44} stroke={stroke} strokeWidth="1.3" />}
-      {p.cross && <path d="M32 15v34M15 32h34" stroke={stroke} strokeWidth="1.3" />}
+    <svg viewBox="0 0 64 64" className={className} role="img" aria-label={label} data-picture={p.shape}>
+      <g transform={`translate(0 ${-thick / 2})`}>
+        <g transform={`translate(1.5 ${thick + 2})`} fill="#0f172a" opacity="0.16">{shape}</g>
+        <g transform={`translate(0 ${thick})`} fill={edge} stroke={line} strokeWidth="1.3">{shape}</g>
+        <g fill={top} stroke={line} strokeWidth="1.3">{shape}</g>
+        <g transform="translate(31 30.5) scale(0.82) translate(-32 -32)" fill="#ffffff" opacity="0.28">{shape}</g>
+        {p.score && (
+          <g strokeLinecap="round">
+            <line x1="32" y1={sc[0] + 1.5} x2="32" y2={sc[1] - 1.5} stroke={line} strokeWidth="1.4" opacity="0.8" />
+            <line x1="32.9" y1={sc[0] + 1.5} x2="32.9" y2={sc[1] - 1.5} stroke="#ffffff" strokeWidth="0.7" opacity="0.6" />
+          </g>
+        )}
+        {p.cross && (
+          <g strokeLinecap="round">
+            <path d="M32 15v34M15 32h34" stroke={line} strokeWidth="1.4" opacity="0.8" />
+            <path d="M32.9 15v34M15 32.9h34" stroke="#ffffff" strokeWidth="0.7" opacity="0.6" />
+          </g>
+        )}
+        {p.imprint && !p.score && !p.cross && <Imprint text={p.imprint} y={p.shape === 'triangle' ? 40 : 34.5} fill={line} />}
+      </g>
     </svg>
   );
 };
