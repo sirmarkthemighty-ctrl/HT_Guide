@@ -1,0 +1,3 @@
+node_modules/
+# Copy for claude.ai artifact publishing (same page without the document skeleton)
+ht-guide.artifact.html

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thai HT Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script>
+  (function () {
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap';
+    document.head.appendChild(l);
+  })();
+</script>
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('htg-theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') t = document.documentElement.getAttribute('data-theme');
+    if (t !== 'light' && t !== 'dark') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (t === 'dark') document.documentElement.classList.add('dark');
+  })();
+</script>
+<!--__VENDOR__-->
+
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0b1329] text-slate-900 dark:text-slate-100 min-h-screen antialiased selection:bg-rose-500 selection:text-white">
+
+<div id="root"></div>
+
+<script>
+  // Measure visible frame height for iframe compatibility
+  (function () {
+    var framed = true;
+    try { framed = window.self !== window.top; } catch (e) {}
+    if (!framed || !window.IntersectionObserver) return;
+    var root = document.documentElement;
+    var probe = document.createElement('div');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.setAttribute('data-frame-probe', '');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:100%;pointer-events:none;visibility:hidden;z-index:-1';
+    document.body.appendChild(probe);
+    var io = null;
+    function apply(entries) {
+      var e = entries[entries.length - 1], b = e.boundingClientRect, i = e.intersectionRect;
+      var top = 0, bottom = 0;
+      if (e.isIntersecting && i.height > 0) {
+        top = Math.max(0, Math.round(i.top - b.top));
+        bottom = Math.max(0, Math.round(b.bottom - i.bottom));
+      }
+      var scrolls = root.scrollHeight > window.innerHeight + 200;
+      root.style.setProperty('--clip-top', top + 'px');
+      root.style.setProperty('--clip-bottom', bottom + 'px');
+      root.style.setProperty('--clip-pad', (scrolls ? Math.min(bottom, 200) : 0) + 'px');
+      root.classList.toggle('frame-clipped', top + bottom > 0);
+    }
+    function watch() {
+      if (io) io.disconnect();
+      var n = Math.min(1000, Math.max(100, Math.ceil(window.innerHeight / 4))), steps = [];
+      for (var k = 0; k <= n; k++) steps.push(k / n);
+      io = new IntersectionObserver(apply, { threshold: steps });
+      io.observe(probe);
+    }
+    watch();
+    window.addEventListener('resize', watch);
+  })();
+</script>
+
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>
